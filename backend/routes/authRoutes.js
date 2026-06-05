@@ -1,0 +1,26 @@
+const express = require('express');
+const router = express.Router();
+const auth = require('../middleware/authMiddleware'); // ✅ Import Middleware
+const { 
+    register, login, createEmployer, sendOtp, 
+    forgotPassword, resetPassword,
+    getMe, updateProfile // ✅ Import New Controllers
+} = require('../controllers/authController');
+
+// Auth Flow
+router.post('/send-otp', sendOtp);
+router.post('/register', register);
+router.post('/login', login);
+
+// Password Reset
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
+
+// Admin
+router.post('/admin/create-employer', createEmployer);
+
+// ✅ NEW PROFILE ROUTES (Protected)
+router.get('/me', auth, getMe);           // Get user details
+router.put('/update-profile', auth, updateProfile); // Update details
+
+module.exports = router;
