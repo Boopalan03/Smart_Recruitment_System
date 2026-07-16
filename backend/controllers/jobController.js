@@ -156,3 +156,31 @@ exports.getAllEmployerApplications = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
+// 10. Delete Job (Employer)
+exports.deleteJob = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const job = await Job.findById(id);
+
+        if (!job) {
+            return res.status(404).json({ msg: 'Job not found' });
+        }
+
+        // Check user authorization (must be the employer who posted it)
+        if (job.postedBy.toString() !== req.user.id) {
+            return res.status(403).json({ msg: 'Not authorized to delete this job' });
+        }
+
+        // Delete all applications related to this job
+        await Application.deleteMany({ job: id });
+
+        // Delete the job itself
+        await Job.findByIdAndDelete(id);
+
+        res.json({ msg: 'Job and all its applications deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};

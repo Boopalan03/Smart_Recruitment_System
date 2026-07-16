@@ -1,13 +1,22 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import API from '../api';
 import CustomModal from '../components/CustomModal';
 
 const SeekerDashboard = () => {
+    const [searchParams] = useSearchParams();
+    const tab = searchParams.get('tab') || 'feed';
+    
     const [jobs, setJobs] = useState([]);
     const [myApplications, setMyApplications] = useState([]);
     const [view, setView] = useState('feed'); 
     const [selectedResume, setSelectedResume] = useState(null);
     const [modal, setModal] = useState({ isOpen: false, type: 'info', message: '' });
+
+    // Sync tab param from URL to the local view state
+    useEffect(() => {
+        setView(tab);
+    }, [tab]);
 
     // ✅ NEW: State for Locations
     const [locationOptions, setLocationOptions] = useState([]);
@@ -193,10 +202,7 @@ const SeekerDashboard = () => {
             )}
 
             <div className="feed">
-                <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
-                    <button onClick={() => setView('feed')} className={view === 'feed' ? 'btn-primary' : 'btn-outline'}>Find Jobs</button>
-                    <button onClick={() => setView('applications')} className={view === 'applications' ? 'btn-primary' : 'btn-outline'}>My Applications</button>
-                </div>
+
 
                 {view === 'feed' && (
                     <div style={{ display: 'grid', gap: '20px' }}>
@@ -209,7 +215,7 @@ const SeekerDashboard = () => {
 
                                     <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                                         <div className="job-meta">
-                                            <span className="meta-item">💰 ₹{job.minSalary || job.salary}</span>
+                                            <span className="meta-item">💰 ₹{typeof job.minSalary === 'number' || typeof job.minSalary === 'string' ? job.minSalary : (job.salary && typeof job.salary === 'object' ? `${job.salary.min || ''} - ${job.salary.max || ''}` : job.salary || 'N/A')}</span>
                                             <span className="meta-item">💼 {job.jobType || 'Full-time'}</span>
                                         </div>
                                         

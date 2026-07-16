@@ -136,3 +136,17 @@ exports.updateProfile = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
+// 3. Delete User Account
+exports.deleteAccount = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        await User.findByIdAndDelete(req.user.id);
+        res.json({ msg: 'Account Deleted Successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};

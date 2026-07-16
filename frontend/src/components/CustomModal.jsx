@@ -1,33 +1,37 @@
 import { useEffect } from 'react'; // ✅ Import useEffect
 import './CustomModal.css';
 
-const CustomModal = ({ isOpen, type, title, message, onClose }) => {
+const CustomModal = ({ isOpen, type, title, message, onClose, showCancel = false, onConfirm = null }) => {
     
-    // ✅ NEW: Listen for "Enter" and "Escape" keys
+    // ✅ Listen for "Enter" and "Escape" keys
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (!isOpen) return;
 
-            if (e.key === 'Enter' || e.key === 'Escape') {
-                e.preventDefault(); // Prevent accidental form submissions
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                onClose();
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (showCancel && onConfirm) {
+                    onConfirm();
+                }
                 onClose();
             }
         };
 
-        // Attach listener
         window.addEventListener('keydown', handleKeyDown);
 
-        // Cleanup listener when modal closes
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, showCancel, onConfirm]);
 
     if (!isOpen) return null;
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            {/* stopPropagation prevents clicking inside the box from closing it */}
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 
                 <div className={`modal-header ${type}`}>
@@ -41,15 +45,39 @@ const CustomModal = ({ isOpen, type, title, message, onClose }) => {
                     {message}
                 </div>
 
-                {/* Button type="button" prevents form submission issues */}
-                <button 
-                    type="button" 
-                    className={`modal-btn ${type}`} 
-                    onClick={onClose}
-                    autoFocus // ✅ Automatically focus this button so Enter works natively too
-                >
-                    OK
-                </button>
+                <div className="modal-actions">
+                    {showCancel ? (
+                        <>
+                            <button 
+                                type="button" 
+                                className="modal-btn cancel-btn" 
+                                onClick={onClose}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="button" 
+                                className={`modal-btn ${type}`} 
+                                onClick={() => {
+                                    if (onConfirm) onConfirm();
+                                    onClose();
+                                }}
+                                autoFocus
+                            >
+                                Confirm
+                            </button>
+                        </>
+                    ) : (
+                        <button 
+                            type="button" 
+                            className={`modal-btn ${type}`} 
+                            onClick={onClose}
+                            autoFocus
+                        >
+                            OK
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -111,27 +111,6 @@ const Register = () => {
                 <Link to="/login" className="auth-link">Login</Link>
             </div>
 
-            {/* ✅ NEW: EMPLOYER CONTACT INFO BOX */}
-            <div style={{ 
-                marginTop: '25px', 
-                padding: '15px', 
-                backgroundColor: '#f8fafc', 
-                borderRadius: '8px', 
-                border: '1px solid #e2e8f0', 
-                textAlign: 'center' 
-            }}>
-                <h4 style={{ color: '#0f172a', marginBottom: '8px', fontSize: '1rem' }}>🏢 Are you an Employer?</h4>
-                <p style={{ color: '#475569', fontSize: '0.85rem', lineHeight: '1.5' }}>
-                    Employers cannot self-register. To post jobs, please contact us to create your account:<br/>
-                    <a 
-                        href="mailto:portaljob54@gmail.com?subject=Employer%20Account%20Request" 
-                        style={{ color: '#2563eb', fontWeight: 'bold', textDecoration: 'none', display: 'inline-block', marginTop: '5px' }}
-                    >
-                        ✉️ portaljob54@gmail.com
-                    </a>
-                </p>
-            </div>
-
         </div>
     );
 };

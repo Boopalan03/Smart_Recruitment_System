@@ -12,7 +12,8 @@ const {
     getApplicationsForJob, 
     updateApplicationStatus, 
     getJobLocations,
-    getAllEmployerApplications 
+    getAllEmployerApplications,
+    deleteJob
 } = require('../controllers/jobController');
 
 // --- PUBLIC ROUTES ---
@@ -29,5 +30,6 @@ router.get('/employer/my-jobs', auth, getMyPostedJobs);
 router.get('/employer/applications/:jobId', auth, getApplicationsForJob);
 router.put('/application/:id/status', auth, updateApplicationStatus);
 router.get('/employer/all-applications', auth, getAllEmployerApplications); // Global Message Inbox
+router.delete('/:id', auth, deleteJob);
 
 module.exports = router;

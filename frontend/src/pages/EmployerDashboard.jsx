@@ -11,13 +11,13 @@ const EmployerDashboard = () => {
     const [allApplications, setAllApplications] = useState([]); 
     const [selectedJobTitle, setSelectedJobTitle] = useState('');
     
-    const [modal, setModal] = useState({ isOpen: false, type: 'info', message: '' });
+    const [modal, setModal] = useState({ isOpen: false, type: 'info', message: '', showCancel: false, onConfirm: null });
 
     const [formData, setFormData] = useState({
         title: '', company: user?.name || '', location: '', jobType: 'Full-time', minSalary: '', description: ''
     });
 
-    const showModal = (type, message) => setModal({ isOpen: true, type, message });
+    const showModal = (type, message, showCancel = false, onConfirm = null) => setModal({ isOpen: true, type, message, showCancel, onConfirm });
     const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
     useEffect(() => {
@@ -56,6 +56,24 @@ const EmployerDashboard = () => {
             setSelectedJobTitle(title);
             setView('applicants');
         } catch { showModal('error', '❌ Failed to fetch applicants.'); }
+    };
+
+    const handleDeleteJob = (jobId) => {
+        showModal(
+            'error', 
+            'Are you sure you want to delete this job listing? This will also delete all applications for this job.', 
+            true, 
+            async () => {
+                try {
+                    await API.delete(`/jobs/${jobId}`);
+                    showModal('success', '🗑️ Job Listing Deleted Successfully!');
+                    setJobs(jobs.filter(job => job._id !== jobId));
+                } catch (err) {
+                    const errorMsg = err.response?.data?.msg || 'Failed to delete job.';
+                    showModal('error', `❌ Error: ${errorMsg}`);
+                }
+            }
+        );
     };
 
     const handleUpdateStatus = async (appId, status) => {
@@ -133,9 +151,14 @@ const EmployerDashboard = () => {
                                         <div className="company-name">{job.location} • {job.jobType}</div>
                                         <p style={{fontSize: '0.9rem', color: '#64748b', marginBottom: '15px'}}>💰 Salary: ₹{job.minSalary}</p>
                                     </div>
-                                    <button className="btn-outline" style={{ width: '100%', textAlign: 'center' }} onClick={() => handleViewApplicants(job._id, job.title)}>
-                                        View Applicants
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
+                                        <button className="btn-outline" style={{ flex: 1, textAlign: 'center' }} onClick={() => handleViewApplicants(job._id, job.title)}>
+                                            View Applicants
+                                        </button>
+                                        <button className="btn-outline" style={{ borderColor: '#ef4444', color: '#ef4444', padding: '10px 15px' }} onClick={() => handleDeleteJob(job._id)}>
+                                            🗑️
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -166,7 +189,14 @@ const EmployerDashboard = () => {
                 </div>
             )}
 
-            <CustomModal isOpen={modal.isOpen} type={modal.type} message={modal.message} onClose={closeModal} />
+            <CustomModal 
+                isOpen={modal.isOpen} 
+                type={modal.type} 
+                message={modal.message} 
+                showCancel={modal.showCancel}
+                onConfirm={modal.onConfirm}
+                onClose={closeModal} 
+            />
         </div>
     );
 };
