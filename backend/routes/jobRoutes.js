@@ -13,7 +13,9 @@ const {
     updateApplicationStatus, 
     getJobLocations,
     getAllEmployerApplications,
-    deleteJob
+    deleteJob,
+    getNotifications,
+    deleteNotification
 } = require('../controllers/jobController');
 
 // --- PUBLIC ROUTES ---
@@ -21,6 +23,8 @@ router.get('/', getJobs);
 router.get('/locations', getJobLocations); // Must be before /:id to prevent conflicts
 
 // --- SEEKER ROUTES ---
+router.get('/notifications', auth, getNotifications);
+router.delete('/notifications/:id', auth, deleteNotification);
 router.post('/:id/apply', auth, upload.single('resume'), applyForJob);
 router.get('/my-applications', auth, getUserApplications);
 

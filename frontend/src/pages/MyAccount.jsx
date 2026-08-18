@@ -194,7 +194,7 @@ const MyAccount = () => {
                             </div>
 
                             {/* ✅ ONLY SHOW GENDER & DOB FOR SEEKERS */}
-                            {user?.role === 'seeker' && (
+                            {(user?.role === 'seeker' || user?.role === 'jobseeker') && (
                                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'}}>
                                     <div>
                                         <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>Gender</label>

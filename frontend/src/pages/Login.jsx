@@ -10,8 +10,12 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await login(formData.email, formData.password);
-            navigate('/');
+            const loggedInUser = await login(formData.email, formData.password);
+            if (loggedInUser && loggedInUser.role === 'employer') {
+                navigate('/employer-dashboard');
+            } else {
+                navigate('/');
+            }
         } catch {
             alert('Invalid Credentials');
         }

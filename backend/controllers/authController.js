@@ -22,7 +22,7 @@ exports.sendOtp = async (req, res) => {
 
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, otp } = req.body;
+        const { name, email, password, otp, role } = req.body;
         const validOtp = await Otp.findOne({ email, otp });
         if (!validOtp) return res.status(400).json({ msg: 'Invalid or Expired OTP' });
 
@@ -32,7 +32,8 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        user = new User({ name, email, password: hashedPassword, role: 'seeker' });
+        const assignedRole = role === 'employer' ? 'employer' : 'seeker';
+        user = new User({ name, email, password: hashedPassword, role: assignedRole });
         await user.save();
         await Otp.deleteOne({ email });
 

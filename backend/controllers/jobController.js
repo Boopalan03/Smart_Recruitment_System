@@ -75,6 +75,20 @@ exports.applyForJob = async (req, res) => {
         });
 
         await newApplication.save();
+
+        // Create a notification for the employer who posted this job
+        const jobObj = await Job.findById(id);
+        if (jobObj && jobObj.postedBy) {
+            const User = require('../models/User');
+            const seekerUser = await User.findById(userId);
+            const Notification = require('../models/Notification');
+            const newNotification = new Notification({
+                user: jobObj.postedBy,
+                message: `New resume submitted by ${seekerUser ? seekerUser.name : 'a candidate'} for your job listing "${jobObj.title}".`
+            });
+            await newNotification.save();
+        }
+
         res.json({ msg: 'Application successful' });
     } catch (err) {
         console.error("Apply Error:", err);
@@ -126,12 +140,33 @@ exports.getApplicationsForJob = async (req, res) => {
 exports.updateApplicationStatus = async (req, res) => {
     try {
         const { status } = req.body; 
-        const application = await Application.findById(req.params.id);
+        const application = await Application.findById(req.params.id).populate('job');
         
         if (!application) return res.status(404).json({ msg: 'Application not found' });
 
         application.status = status;
         await application.save();
+
+        // Create a notification for seeker on accept/reject
+        if (status === 'accepted' || status === 'rejected') {
+            const Notification = require('../models/Notification');
+            const jobTitle = application.job?.title || 'Job';
+            const companyName = application.job?.company || 'Company';
+            
+            let message = '';
+            if (status === 'accepted') {
+                message = `Your application for "${jobTitle}" at "${companyName}" has been accepted. You will receive the mail from ${companyName} for the further interview purpose.`;
+            } else {
+                message = `Your application for "${jobTitle}" at "${companyName}" has been ${status}.`;
+            }
+
+            const newNotification = new Notification({
+                user: application.applicant,
+                message: message
+            });
+            await newNotification.save();
+        }
+
         res.json(application);
     } catch (err) {
         console.error(err);
@@ -179,6 +214,38 @@ exports.deleteJob = async (req, res) => {
         await Job.findByIdAndDelete(id);
 
         res.json({ msg: 'Job and all its applications deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+// 11. Get Seeker Notifications (Seeker)
+exports.getNotifications = async (req, res) => {
+    try {
+        const Notification = require('../models/Notification');
+        const notifications = await Notification.find({ user: req.user.id }).sort({ createdAt: -1 });
+        res.json(notifications);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+// 12. Delete Notification (Seeker)
+exports.deleteNotification = async (req, res) => {
+    try {
+        const Notification = require('../models/Notification');
+        const notification = await Notification.findById(req.params.id);
+        
+        if (!notification) return res.status(404).json({ msg: 'Notification not found' });
+
+        if (notification.user.toString() !== req.user.id) {
+            return res.status(403).json({ msg: 'Not authorized' });
+        }
+
+        await Notification.findByIdAndDelete(req.params.id);
+        res.json({ msg: 'Notification deleted successfully' });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

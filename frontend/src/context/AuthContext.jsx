@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user);
+        return data.user;
     };
 
     const register = async (userData) => {
@@ -39,6 +40,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user);
+        return data.user;
     };
 
     const logout = () => {
@@ -55,7 +57,7 @@ export const AuthProvider = ({ children }) => {
     if (loading) return null;
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, updateUser }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

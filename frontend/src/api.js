@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Create an Axios instance
+// Create an Axios instance using environment variable or default local URL
 const API = axios.create({
-    baseURL: 'http://localhost:5000/api', // Make sure this matches your backend port
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
 });
 
 // ✅ INTERCEPTOR: Automatically adds the token to headers
@@ -13,5 +13,18 @@ API.interceptors.request.use((req) => {
     }
     return req;
 });
+
+// ✅ INTERCEPTOR: Handles token expiration / invalidation by logging the user out
+API.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default API;

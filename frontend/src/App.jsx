@@ -30,13 +30,13 @@ function App() {
 
           <Route path="/dashboard" element={
             <ProtectedRoute>
-               <SeekerDashboard /> 
+              <SeekerDashboard />
             </ProtectedRoute>
           } />
           
           <Route path="/employer-dashboard" element={
             <ProtectedRoute>
-               <EmployerDashboard />
+              <EmployerDashboard />
             </ProtectedRoute>
           } />
 

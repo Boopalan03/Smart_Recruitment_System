@@ -13,3 +13,8 @@ node_modules/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Uploads & temporary test files
+backend/uploads/*
+!backend/uploads/.gitkeep
+*.pdf
