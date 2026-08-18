@@ -32,7 +32,7 @@ const Register = () => {
             alert(res.data.msg);
             setOtpSent(true);
         } catch (err) {
-            const msg = err.response?.data?.msg || 'Error sending OTP';
+            const msg = err.response?.data?.msg || `Failed to send OTP (${err.message})`;
             alert(msg);
         }
     };

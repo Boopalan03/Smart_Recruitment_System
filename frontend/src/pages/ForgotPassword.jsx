@@ -16,7 +16,7 @@ const ForgotPassword = () => {
             alert(res.data.msg);
             setStep(2);
         } catch (err) {
-            alert(err.response?.data?.msg || 'Error sending OTP');
+            alert(err.response?.data?.msg || `Failed to send OTP (${err.message})`);
         }
     };
 
