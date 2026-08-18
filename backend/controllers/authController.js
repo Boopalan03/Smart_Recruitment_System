@@ -17,7 +17,10 @@ exports.sendOtp = async (req, res) => {
         await sendEmail(email, otp);
 
         res.json({ msg: 'OTP sent successfully' });
-    } catch (err) { res.status(500).send('Server Error'); }
+    } catch (err) {
+        console.error("sendOtp Error:", err);
+        res.status(500).json({ msg: err.message || 'Failed to send OTP email' });
+    }
 };
 
 exports.register = async (req, res) => {
@@ -81,7 +84,10 @@ exports.forgotPassword = async (req, res) => {
         await sendEmail(email, otp);
 
         res.json({ msg: 'OTP sent to email' });
-    } catch (err) { res.status(500).send('Server Error'); }
+    } catch (err) {
+        console.error("forgotPassword Error:", err);
+        res.status(500).json({ msg: err.message || 'Failed to send OTP email' });
+    }
 };
 
 exports.resetPassword = async (req, res) => {
