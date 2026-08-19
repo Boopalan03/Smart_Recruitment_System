@@ -338,63 +338,89 @@ const SeekerDashboard = () => {
                                 );
                             })
                         ) : (
-                            <div className="no-jobs">
+                            <div className="no-jobs" style={{ gridColumn: '1 / -1' }}>
+                                <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🔍</div>
                                 <h3>No Jobs Found</h3>
-                                <p>Try adjusting your search filters.</p>
+                                <p>Try adjusting or clearing your search filters.</p>
+                                <button 
+                                    className="btn-outline" 
+                                    style={{ marginTop: '15px' }}
+                                    onClick={() => setFilters({location: '', jobType: '', minSalary: 0, search: ''})}
+                                >
+                                    Clear Filters
+                                </button>
                             </div>
                         )}
                     </div>
                 )}
-
-                {/* ... inside SeekerDashboard.jsx ... */}
 
                 {view === 'applications' && (
                     <>
                         <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
                             My Applications
                         </h2>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', width: '100%' }}>
-                        {myApplications.map(app => (
-                            <div 
-                                key={app._id} 
-                                className="job-card" 
-                                style={{ 
-                                    marginBottom: '0',
-                                    borderLeft: `5px solid ${
-                                        app.status === 'accepted' ? '#22c55e' : 
-                                        app.status === 'rejected' ? '#ef4444' : '#fbbf24'
-                                    }` 
-                                }}
-                            >
-                                <h3 className="job-title">{app.job?.title || 'Job Removed'}</h3>
-                                <div className="company-name">{app.job?.company}</div>
-                                
-                                <div style={{ marginTop: '10px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                                    
-                                    {/* Status Text */}
-                                    <div style={{ marginBottom: '5px' }}>
-                                        <strong>Status: </strong> 
-                                        <span style={{ 
-                                            textTransform: 'capitalize', 
-                                            fontWeight: 'bold', 
-                                            color: app.status === 'accepted' ? '#15803d' : 
-                                                app.status === 'rejected' ? '#b91c1c' : '#b45309'
-                                        }}>
-                                            {app.status}
-                                        </span>
-                                    </div>
+                        {myApplications.length > 0 ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', width: '100%' }}>
+                                {myApplications.map(app => (
+                                    <div 
+                                        key={app._id} 
+                                        className="job-card" 
+                                        style={{ 
+                                            marginBottom: '0',
+                                            borderLeft: `5px solid ${
+                                                app.status === 'accepted' ? '#22c55e' : 
+                                                app.status === 'rejected' ? '#ef4444' : '#fbbf24'
+                                            }` 
+                                        }}
+                                    >
+                                        <h3 className="job-title">{app.job?.title || 'Job Removed'}</h3>
+                                        <div className="company-name">{app.job?.company}</div>
+                                        
+                                        <div style={{ marginTop: '10px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                            {/* Status Text */}
+                                            <div style={{ marginBottom: '5px' }}>
+                                                <strong>Status: </strong> 
+                                                <span style={{ 
+                                                    textTransform: 'capitalize', 
+                                                    fontWeight: 'bold', 
+                                                    color: app.status === 'accepted' ? '#15803d' : 
+                                                        app.status === 'rejected' ? '#b91c1c' : '#b45309'
+                                                }}>
+                                                    {app.status}
+                                                </span>
+                                            </div>
 
-                                    {/* ✅ NEW: Show Message ONLY if Accepted */}
-                                    {app.status === 'accepted' && (
-                                        <div style={{ fontSize: '0.9rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            📩 <span>You will receive an email shortly regarding next steps.</span>
+                                            {/* Show Message ONLY if Accepted */}
+                                            {app.status === 'accepted' && (
+                                                <div style={{ fontSize: '0.9rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    📩 <span>You will receive an email shortly regarding next steps.</span>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                    
-                                </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        ) : (
+                            <div className="no-jobs" style={{ width: '100%', padding: '60px 20px' }}>
+                                <div style={{ fontSize: '3.2rem', marginBottom: '12px' }}>📋</div>
+                                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
+                                    No Applications Found
+                                </h3>
+                                <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: '420px', margin: '0 auto 24px auto', lineHeight: '1.6' }}>
+                                    You haven't submitted any job applications yet. Start exploring open positions and submit your application!
+                                </p>
+                                <button 
+                                    className="btn-primary"
+                                    onClick={() => {
+                                        setView('feed');
+                                        window.history.pushState(null, '', '/dashboard?tab=feed');
+                                    }}
+                                    style={{ padding: '12px 26px', fontSize: '0.95rem', fontWeight: '600' }}
+                                >
+                                    🔍 Find My Job
+                                </button>
+                            </div>
+                        )}
                     </>
                 )}
             </div>
