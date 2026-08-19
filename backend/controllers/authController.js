@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, contact, gender, dob } = req.body;
 
         let user = await User.findOne({ email });
         if (user) return res.status(400).json({ msg: 'User already exists' });
@@ -15,11 +15,19 @@ exports.register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const assignedRole = role === 'employer' ? 'employer' : 'seeker';
-        user = new User({ name, email, password: hashedPassword, role: assignedRole });
+        user = new User({ 
+            name, 
+            email, 
+            password: hashedPassword, 
+            role: assignedRole,
+            contact,
+            gender,
+            dob
+        });
         await user.save();
 
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, contact: user.contact, gender: user.gender, dob: user.dob } });
     } catch (err) { res.status(500).send('Server Error'); }
 };
 

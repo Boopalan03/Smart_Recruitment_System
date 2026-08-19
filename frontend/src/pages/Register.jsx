@@ -10,6 +10,9 @@ const Register = () => {
     const [formData, setFormData] = useState({ 
         name: '', 
         email: '', 
+        contact: '',
+        gender: '',
+        dob: '',
         password: '' 
     });
     
@@ -84,6 +87,39 @@ const Register = () => {
                     onChange={(e) => setFormData({...formData, email: e.target.value})} 
                     required 
                 />
+                <input 
+                    type="tel" placeholder="Phone Number (e.g. +91 9876543210)" className="auth-input"
+                    value={formData.contact}
+                    onChange={(e) => setFormData({...formData, contact: e.target.value})} 
+                    required 
+                />
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                        <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px', textAlign: 'left' }}>Gender</label>
+                        <select 
+                            className="auth-input"
+                            value={formData.gender}
+                            onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                            required
+                        >
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px', textAlign: 'left' }}>Date of Birth</label>
+                        <input 
+                            type="date" className="auth-input"
+                            value={formData.dob}
+                            onChange={(e) => setFormData({...formData, dob: e.target.value})} 
+                            required 
+                        />
+                    </div>
+                </div>
+
                 <input 
                     type="password" placeholder="Set Password" className="auth-input"
                     value={formData.password}
