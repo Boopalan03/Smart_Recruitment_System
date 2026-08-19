@@ -12,7 +12,8 @@ import {
     CloseIcon, 
     DownloadIcon,
     InfoIcon,
-    CheckIcon
+    CheckIcon,
+    VerifiedIcon // ✅ Added
 } from '../components/Icons';
 
 const getRelativeTime = (dateString) => {
@@ -420,7 +421,14 @@ const SeekerDashboard = () => {
                                                     <div className="job-title-row">
                                                         <h3 className="job-title">{job.title}</h3>
                                                         <div className="company-name-row">
-                                                            <span>{job.company}</span>
+                                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                                {job.company}
+                                                                {job.isEmployerVerified && (
+                                                                    <span title="Verified Employer" style={{ display: 'inline-flex' }}>
+                                                                        <VerifiedIcon size={16} />
+                                                                    </span>
+                                                                )}
+                                                            </span>
                                                             {job.location && (
                                                                 <>
                                                                     <span>•</span>

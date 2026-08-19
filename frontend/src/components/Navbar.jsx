@@ -112,7 +112,7 @@ const Navbar = () => {
             </button>
 
             <div className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
-                {(!user || user.role !== 'employer') && (
+                {(!user || (user.role !== 'employer' && user.role !== 'superadmin')) && (
                     <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
                 )}
                 
@@ -141,6 +141,14 @@ const Navbar = () => {
                                 className={`nav-link ${location.pathname === '/employer-dashboard' ? 'active' : ''}`}
                             >
                                 Dashboard
+                            </Link>
+                        )}
+                        {user.role === 'superadmin' && (
+                            <Link 
+                                to="/superadmin" 
+                                className={`nav-link ${location.pathname === '/superadmin' ? 'active' : ''}`}
+                            >
+                                Admin Panel
                             </Link>
                         )}
                         {(user.role === 'seeker' || user.role === 'jobseeker') && (
@@ -191,18 +199,20 @@ const Navbar = () => {
                                 )}
                             </div>
                         )}
-                        <Link 
-                            to="/my-account" 
-                            className={`nav-link ${location.pathname === '/my-account' ? 'active' : ''}`} 
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
-                        >
-                            <div className="user-avatar-btn">
-                                <span className="user-avatar">{getInitial(user.name)}</span>
-                                <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {user.name}
-                                </span>
-                            </div>
-                        </Link>
+                        {user.role !== 'superadmin' && (
+                            <Link 
+                                to="/my-account" 
+                                className={`nav-link ${location.pathname === '/my-account' ? 'active' : ''}`} 
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+                            >
+                                <div className="user-avatar-btn">
+                                    <span className="user-avatar">{getInitial(user.name)}</span>
+                                    <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {user.name}
+                                    </span>
+                                </div>
+                            </Link>
+                        )}
                         <button 
                             onClick={handleLogout} 
                             className="btn-outline" 

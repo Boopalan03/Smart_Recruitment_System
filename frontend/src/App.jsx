@@ -8,7 +8,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import MyAccount from './pages/MyAccount';
 import SeekerDashboard from './pages/SeekerDashboard';
 import EmployerDashboard from './pages/EmployerDashboard';
-import AdminCreateEmployer from './pages/AdminCreateEmployer'; // ✅ Import This
+import SuperAdminDashboard from './pages/SuperAdminDashboard'; // ✅ New Super Admin Page
 import ProtectedRoute from './components/ProtectedRoute';
 import About from './pages/About';
 
@@ -24,9 +24,11 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           
-          {/* ✅ NEW ADMIN ROUTE */}
-          {/* Note: In a real app, you'd protect this route too. For now, it's public so you can access it. */}
-          <Route path="/admin/create-employer" element={<AdminCreateEmployer />} />
+          <Route path="/superadmin" element={
+            <ProtectedRoute>
+              <SuperAdminDashboard />
+            </ProtectedRoute>
+          } />
 
           <Route path="/dashboard" element={
             <ProtectedRoute>

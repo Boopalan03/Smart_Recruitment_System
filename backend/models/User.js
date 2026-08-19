@@ -5,7 +5,11 @@ const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['seeker', 'employer'], default: 'seeker' },
+    role: { type: String, enum: ['seeker', 'employer', 'superadmin'], default: 'seeker' },
+
+    // ✅ SUPER ADMIN & VERIFICATION FIELDS
+    isVerified: { type: Boolean, default: false }, // Only applies to employers
+    isBlocked: { type: Boolean, default: false },
 
     // ✅ NEW PROFILE FIELDS (Added for My Account)
     contact: { type: String },

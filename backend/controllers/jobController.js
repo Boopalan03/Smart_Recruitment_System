@@ -19,8 +19,23 @@ exports.getJobs = async (req, res) => {
         if (minSalary) query.minSalary = { $gte: Number(minSalary) };
         if (jobType) query.jobType = { $regex: jobType, $options: 'i' };
 
-        const jobs = await Job.find(query).sort({ createdAt: -1 });
-        res.json(jobs);
+        const jobs = await Job.find(query)
+            .populate('postedBy', 'isVerified isBlocked name')
+            .sort({ createdAt: -1 });
+
+        // Filter out jobs where the employer is blocked
+        const filteredJobs = jobs.filter(job => !job.postedBy || !job.postedBy.isBlocked);
+        
+        // Map jobs to flatten isVerified flag for easier frontend access
+        const finalJobs = filteredJobs.map(job => {
+            const jobObj = job.toObject();
+            if (jobObj.postedBy) {
+                jobObj.isEmployerVerified = jobObj.postedBy.isVerified;
+            }
+            return jobObj;
+        });
+
+        res.json(finalJobs);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
@@ -44,6 +59,13 @@ exports.createJob = async (req, res) => {
         if (req.user.role !== 'employer') {
             return res.status(403).json({ msg: 'Access denied. Employers only.' });
         }
+        // Check if user is blocked
+        const User = require('../models/User');
+        const user = await User.findById(req.user.id);
+        if (user && user.isBlocked) {
+            return res.status(403).json({ msg: 'Your account has been blocked. You cannot post jobs.' });
+        }
+
         const newJob = new Job({ ...req.body, postedBy: req.user.id });
         const job = await newJob.save();
         res.json(job);

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/authMiddleware'); // ✅ Import Middleware
 const { 
-    register, login, createEmployer, 
+    register, login, 
     resetPassword,
     getMe, updateProfile, deleteAccount // ✅ Import New Controllers
 } = require('../controllers/authController');
@@ -13,9 +13,6 @@ router.post('/login', login);
 
 // Password Reset
 router.post('/reset-password', resetPassword);
-
-// Admin
-router.post('/admin/create-employer', createEmployer);
 
 // ✅ NEW PROFILE ROUTES (Protected)
 router.get('/me', auth, getMe);           // Get user details

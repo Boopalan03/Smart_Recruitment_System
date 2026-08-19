@@ -10,11 +10,13 @@ const Home = () => {
     useEffect(() => {
         if (user && user.role === 'employer') {
             navigate('/employer-dashboard');
+        } else if (user && user.role === 'superadmin') {
+            navigate('/superadmin');
         }
     }, [user, navigate]);
 
     if (user) {
-        if (user.role === 'employer') {
+        if (user.role === 'employer' || user.role === 'superadmin') {
             return null;
         }
     }
@@ -37,6 +39,8 @@ const Home = () => {
                                 if (user) {
                                     if (user.role === 'employer') {
                                         navigate('/employer-dashboard');
+                                    } else if (user.role === 'superadmin') {
+                                        navigate('/superadmin');
                                     } else {
                                         navigate('/dashboard?tab=feed');
                                     }

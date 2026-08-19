@@ -14,6 +14,9 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        if (role === 'superadmin') {
+            return res.status(400).json({ msg: 'Cannot register as superadmin' });
+        }
         const assignedRole = role === 'employer' ? 'employer' : 'seeker';
         user = new User({ 
             name, 
@@ -27,7 +30,7 @@ exports.register = async (req, res) => {
         await user.save();
 
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, contact: user.contact, gender: user.gender, dob: user.dob } });
+        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified, contact: user.contact, gender: user.gender, dob: user.dob } });
     } catch (err) { res.status(500).send('Server Error'); }
 };
 
@@ -36,26 +39,16 @@ exports.login = async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
+        
+        if (user.isBlocked) {
+            return res.status(403).json({ msg: 'Your account has been blocked by the administrator' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ msg: 'Invalid Credentials' });
 
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
-    } catch (err) { res.status(500).send('Server Error'); }
-};
-
-exports.createEmployer = async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-        let user = await User.findOne({ email });
-        if (user) return res.status(400).json({ msg: 'User already exists' });
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        user = new User({ name, email, password: hashedPassword, role: 'employer' });
-        await user.save();
-        res.json({ msg: 'Employer Created', user });
+        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified } });
     } catch (err) { res.status(500).send('Server Error'); }
 };
 
