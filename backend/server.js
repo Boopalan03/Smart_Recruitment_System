@@ -28,6 +28,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 
+// Handle favicon requests cleanly
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // Default Route
 app.get('/', (req, res) => {
     res.send('API is running...');
