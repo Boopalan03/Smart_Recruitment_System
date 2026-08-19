@@ -126,8 +126,8 @@ exports.getApplicationsForJob = async (req, res) => {
         const job = await Job.findOne({ _id: jobId, postedBy: req.user.id });
         if (!job) return res.status(403).json({ msg: 'Not authorized to view these applications' });
 
-        const applications = await Application.find({ job: jobId })
-            .populate('applicant', 'name email');
+        const applications = await Application.find({ job: jobId, hiddenFromEmployer: { $ne: true } })
+            .populate('applicant', 'name email contact gender dob');
             
         res.json(applications);
     } catch (err) {
@@ -180,8 +180,8 @@ exports.getAllEmployerApplications = async (req, res) => {
         const myJobs = await Job.find({ postedBy: req.user.id }).select('_id');
         const jobIds = myJobs.map(job => job._id);
 
-        const applications = await Application.find({ job: { $in: jobIds } })
-            .populate('applicant', 'name email')
+        const applications = await Application.find({ job: { $in: jobIds }, hiddenFromEmployer: { $ne: true } })
+            .populate('applicant', 'name email contact gender dob')
             .populate('job', 'title') 
             .sort({ createdAt: -1 }); 
 
@@ -248,6 +248,57 @@ exports.deleteNotification = async (req, res) => {
         res.json({ msg: 'Notification deleted successfully' });
     } catch (err) {
         console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+// 13. Download Accepted Applicants CSV (Employer)
+exports.downloadAcceptedApplicants = async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        
+        const job = await Job.findOne({ _id: jobId, postedBy: req.user.id });
+        if (!job) {
+            return res.status(403).json({ msg: 'Not authorized or job not found' });
+        }
+
+        const acceptedApps = await Application.find({ 
+            job: jobId, 
+            status: 'accepted',
+            hiddenFromEmployer: { $ne: true }
+        }).populate('applicant', 'name email contact gender dob');
+
+        if (!acceptedApps || acceptedApps.length === 0) {
+            return res.status(404).json({ msg: 'No accepted applicants found to download for this job.' });
+        }
+
+        let csvContent = "Applicant Name,Email,Contact,Gender,Date of Birth,Job Title,Company,Applied Date,Resume Path\n";
+
+        acceptedApps.forEach(app => {
+            const applicant = app.applicant || {};
+            const name = `"${(applicant.name || '').replace(/"/g, '""')}"`;
+            const email = `"${(applicant.email || '').replace(/"/g, '""')}"`;
+            const contact = `"${(applicant.contact || '').replace(/"/g, '""')}"`;
+            const gender = `"${(applicant.gender || '').replace(/"/g, '""')}"`;
+            const dob = applicant.dob ? `"${new Date(applicant.dob).toISOString().split('T')[0]}"` : '""';
+            const title = `"${(job.title || '').replace(/"/g, '""')}"`;
+            const company = `"${(job.company || '').replace(/"/g, '""')}"`;
+            const appliedDate = `"${new Date(app.createdAt).toISOString().split('T')[0]}"`;
+            const resume = `"${(app.resume || '').replace(/"/g, '""')}"`;
+
+            csvContent += `${name},${email},${contact},${gender},${dob},${title},${company},${appliedDate},${resume}\n`;
+        });
+
+        const appIds = acceptedApps.map(app => app._id);
+        await Application.updateMany({ _id: { $in: appIds } }, { hiddenFromEmployer: true });
+
+        const safeTitle = (job.title || 'Job').replace(/[^a-zA-Z0-9_-]/g, '_');
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=accepted_applicants_${safeTitle}.csv`);
+        return res.status(200).send(csvContent);
+
+    } catch (err) {
+        console.error("Download CSV Error:", err);
         res.status(500).send('Server Error');
     }
 };

@@ -8,7 +8,8 @@ const ApplicationSchema = new mongoose.Schema({
         enum: ['pending', 'accepted', 'rejected'], 
         default: 'pending' 
     },
-    resume: { type: String } // URL to resume file
+    resume: { type: String }, // URL to resume file
+    hiddenFromEmployer: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Application', ApplicationSchema);

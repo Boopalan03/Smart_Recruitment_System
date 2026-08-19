@@ -10,6 +10,7 @@ const EmployerDashboard = () => {
     const [applicants, setApplicants] = useState([]); 
     const [allApplications, setAllApplications] = useState([]); 
     const [selectedJobTitle, setSelectedJobTitle] = useState('');
+    const [selectedJobId, setSelectedJobId] = useState('');
     
     const [modal, setModal] = useState({ isOpen: false, type: 'info', message: '', showCancel: false, onConfirm: null });
 
@@ -27,21 +28,21 @@ const EmployerDashboard = () => {
     const showModal = (type, message, showCancel = false, onConfirm = null) => setModal({ isOpen: true, type, message, showCancel, onConfirm });
     const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
+    const fetchMyJobs = async () => {
+        try {
+            const res = await API.get('/jobs/employer/my-jobs');
+            setJobs(res.data);
+        } catch (err) { console.error(err); }
+    };
+
+    const fetchAllApplications = async () => {
+        try {
+            const res = await API.get('/jobs/employer/all-applications');
+            setAllApplications(res.data);
+        } catch (err) { console.error(err); }
+    };
+
     useEffect(() => {
-        const fetchMyJobs = async () => {
-            try {
-                const res = await API.get('/jobs/employer/my-jobs');
-                setJobs(res.data);
-            } catch (err) { console.error(err); }
-        };
-
-        const fetchAllApplications = async () => {
-            try {
-                const res = await API.get('/jobs/employer/all-applications');
-                setAllApplications(res.data);
-            } catch (err) { console.error(err); }
-        };
-
         fetchMyJobs();
         fetchAllApplications();
 
@@ -80,8 +81,51 @@ const EmployerDashboard = () => {
             const res = await API.get(`/jobs/employer/applications/${jobId}`);
             setApplicants(res.data);
             setSelectedJobTitle(title);
+            setSelectedJobId(jobId);
             setView('applicants');
         } catch { showModal('error', '❌ Failed to fetch applicants.'); }
+    };
+
+    const handleDownloadAccepted = async (jobId, title) => {
+        try {
+            const response = await API.get(`/jobs/employer/download-accepted-csv/${jobId}`, {
+                responseType: 'blob'
+            });
+            
+            const blob = new Blob([response.data], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            const safeTitle = (title || 'Job').replace(/[^a-zA-Z0-9_-]/g, '_');
+            link.setAttribute('download', `accepted_applicants_${safeTitle}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            showModal('success', '✅ Downloaded accepted applicants spreadsheet! The downloaded records have been archived from your employer view.');
+            
+            fetchMyJobs();
+            fetchAllApplications();
+            if (jobId) {
+                const res = await API.get(`/jobs/employer/applications/${jobId}`);
+                setApplicants(res.data);
+            }
+        } catch (err) {
+            if (err.response && err.response.data instanceof Blob) {
+                const text = await err.response.data.text();
+                try {
+                    const parsed = JSON.parse(text);
+                    showModal('error', `❌ ${parsed.msg || 'No accepted applicants found to download.'}`);
+                    return;
+                } catch {
+                    showModal('error', '❌ No accepted applicants found to download for this job.');
+                    return;
+                }
+            }
+            const msg = err.response?.data?.msg || 'No accepted applicants found to download.';
+            showModal('error', `❌ ${msg}`);
+        }
     };
 
     const handleDeleteJob = (jobId) => {
@@ -206,11 +250,19 @@ const EmployerDashboard = () => {
                                         </div>
                                         <p style={{fontSize: '0.9rem', color: '#64748b', marginBottom: '15px'}}>💰 Salary: ₹{job.minSalary} - ₹{job.maxSalary} • 💼 Exp: {job.experienceLevel} Yrs</p>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '10px', marginTop: '15px', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
-                                        <button className="btn-primary" style={{ flex: 1, textAlign: 'center', padding: '10px' }} onClick={() => handleViewApplicants(job._id, job.title)}>
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '15px', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
+                                        <button className="btn-primary" style={{ flex: 1, textAlign: 'center', padding: '10px 12px' }} onClick={() => handleViewApplicants(job._id, job.title)}>
                                             View Applicants
                                         </button>
-                                        <button className="btn-outline" style={{ borderColor: '#ef4444', color: '#ef4444', padding: '10px 15px' }} onClick={() => handleDeleteJob(job._id)}>
+                                        <button 
+                                            className="btn-outline" 
+                                            title="Download Accepted Applicants Spreadsheet (.CSV)"
+                                            style={{ borderColor: '#16a34a', color: '#16a34a', padding: '10px 12px' }} 
+                                            onClick={() => handleDownloadAccepted(job._id, job.title)}
+                                        >
+                                            📊 CSV
+                                        </button>
+                                        <button className="btn-outline" style={{ borderColor: '#ef4444', color: '#ef4444', padding: '10px 12px' }} onClick={() => handleDeleteJob(job._id)}>
                                             🗑️
                                         </button>
                                     </div>
@@ -224,11 +276,30 @@ const EmployerDashboard = () => {
             {/* TAB: SPECIFIC JOB APPLICANTS */}
             {view === 'applicants' && (
                 <div>
-                    <button onClick={() => setView('jobs')} className="btn-outline" style={{marginBottom: '20px'}}>← Back to Jobs</button>
-                    <h3 style={{marginBottom: '20px'}}>Applicants for: {selectedJobTitle}</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', width: '100%' }}>
-                        {applicants.map(app => renderApplicantCard(app, openResume, handleUpdateStatus))}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+                        <div>
+                            <button onClick={() => setView('jobs')} className="btn-outline" style={{marginBottom: '10px'}}>← Back to Jobs</button>
+                            <h3 style={{margin: 0}}>Applicants for: {selectedJobTitle}</h3>
+                        </div>
+                        <button 
+                            className="btn-primary" 
+                            style={{ background: 'linear-gradient(135deg, #16a34a, #059669)', border: 'none', gap: '8px' }}
+                            onClick={() => handleDownloadAccepted(selectedJobId, selectedJobTitle)}
+                        >
+                            📥 Download Accepted Applicants (.CSV)
+                        </button>
                     </div>
+
+                    {applicants.length === 0 ? (
+                        <div className="no-jobs">
+                            <h3>No Active Applicants</h3>
+                            <p>No new or pending applicants for this job.</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', width: '100%' }}>
+                            {applicants.map(app => renderApplicantCard(app, openResume, handleUpdateStatus))}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -277,9 +348,14 @@ const renderApplicantCard = (app, openResume, handleUpdateStatus, showJobTitle =
             <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
                 {app.applicant?.name || 'Unknown User'}
             </h4>
-            <div style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '12px', wordBreak: 'break-all' }}>
+            <div style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '6px', wordBreak: 'break-all' }}>
                 ✉️ {app.applicant?.email}
             </div>
+            {app.applicant?.contact && (
+                <div style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '6px' }}>
+                    📞 {app.applicant?.contact}
+                </div>
+            )}
             
             {showJobTitle && (
                 <div style={{ color: '#4f46e5', fontSize: '0.9rem', marginBottom: '14px', fontWeight: '700' }}>

@@ -15,7 +15,8 @@ const {
     getAllEmployerApplications,
     deleteJob,
     getNotifications,
-    deleteNotification
+    deleteNotification,
+    downloadAcceptedApplicants
 } = require('../controllers/jobController');
 
 // --- PUBLIC ROUTES ---
@@ -32,6 +33,7 @@ router.get('/my-applications', auth, getUserApplications);
 router.post('/', auth, createJob);
 router.get('/employer/my-jobs', auth, getMyPostedJobs);
 router.get('/employer/applications/:jobId', auth, getApplicationsForJob);
+router.get('/employer/download-accepted-csv/:jobId', auth, downloadAcceptedApplicants);
 router.put('/application/:id/status', auth, updateApplicationStatus);
 router.get('/employer/all-applications', auth, getAllEmployerApplications); // Global Message Inbox
 router.delete('/:id', auth, deleteJob);
