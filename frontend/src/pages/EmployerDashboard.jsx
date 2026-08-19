@@ -196,7 +196,7 @@ const EmployerDashboard = () => {
                     {jobs.length === 0 ? (
                         <div className="no-jobs"><h3>You haven't posted any jobs yet.</h3></div>
                     ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                             {jobs.map(job => (
                                 <div key={job._id} className="job-card" style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', marginBottom: 0 }}>
                                     <div>
@@ -226,7 +226,7 @@ const EmployerDashboard = () => {
                 <div>
                     <button onClick={() => setView('jobs')} className="btn-outline" style={{marginBottom: '20px'}}>← Back to Jobs</button>
                     <h3 style={{marginBottom: '20px'}}>Applicants for: {selectedJobTitle}</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px', width: '100%' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', width: '100%' }}>
                         {applicants.map(app => renderApplicantCard(app, openResume, handleUpdateStatus))}
                     </div>
                 </div>
@@ -239,7 +239,7 @@ const EmployerDashboard = () => {
                     {allApplications.length === 0 ? (
                         <div className="no-jobs"><h3>Your inbox is empty.</h3></div>
                     ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px', width: '100%' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', width: '100%' }}>
                             {allApplications.map(app => renderApplicantCard(app, openResume, handleUpdateStatus, true))}
                         </div>
                     )}

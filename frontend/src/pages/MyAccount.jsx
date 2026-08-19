@@ -8,10 +8,8 @@ const MyAccount = () => {
     const [loading, setLoading] = useState(true);
     const [modal, setModal] = useState({ isOpen: false, type: 'info', message: '' });
     
-    // Password Reset via OTP states
+    // Password Reset states
     const [newPassword, setNewPassword] = useState('');
-    const [otp, setOtp] = useState('');
-    const [otpStep, setOtpStep] = useState(1);
     const [passwordLoading, setPasswordLoading] = useState(false);
     
     const [formData, setFormData] = useState({
@@ -69,39 +67,20 @@ const MyAccount = () => {
         }
     };
 
-    // 3. Send OTP for password reset
-    const handleSendOtp = async () => {
+    // 3. Change Password
+    const handleChangePassword = async (e) => {
+        if (e) e.preventDefault();
         if (!newPassword) {
-            setModal({ isOpen: true, type: 'error', message: 'Please enter a new password first.' });
+            setModal({ isOpen: true, type: 'error', message: 'Please enter a new password.' });
             return;
         }
         setPasswordLoading(true);
         try {
-            const res = await API.post('/auth/forgot-password', { email: formData.email });
-            setModal({ isOpen: true, type: 'success', message: `✅ ${res.data.msg || 'OTP sent successfully!'}` });
-            setOtpStep(2);
-        } catch (err) {
-            setModal({ isOpen: true, type: 'error', message: err.response?.data?.msg || 'Error sending OTP.' });
-        } finally {
-            setPasswordLoading(false);
-        }
-    };
-
-    // 4. Verify OTP & Reset Password
-    const handleVerifyAndReset = async () => {
-        if (!otp) {
-            setModal({ isOpen: true, type: 'error', message: 'Please enter the 6-digit OTP.' });
-            return;
-        }
-        setPasswordLoading(true);
-        try {
-            const res = await API.post('/auth/reset-password', { email: formData.email, otp, newPassword });
-            setModal({ isOpen: true, type: 'success', message: `✅ ${res.data.msg || 'Password Reset Successfully!'}` });
+            const res = await API.post('/auth/reset-password', { email: formData.email, newPassword });
+            setModal({ isOpen: true, type: 'success', message: `✅ ${res.data.msg || 'Password Changed Successfully!'}` });
             setNewPassword('');
-            setOtp('');
-            setOtpStep(1);
         } catch (err) {
-            setModal({ isOpen: true, type: 'error', message: err.response?.data?.msg || 'Reset Failed. Please check the OTP.' });
+            setModal({ isOpen: true, type: 'error', message: err.response?.data?.msg || 'Failed to change password.' });
         } finally {
             setPasswordLoading(false);
         }
@@ -195,7 +174,7 @@ const MyAccount = () => {
 
                             {/* ✅ ONLY SHOW GENDER & DOB FOR SEEKERS */}
                             {(user?.role === 'seeker' || user?.role === 'jobseeker') && (
-                                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'}}>
+                                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px'}}>
                                     <div>
                                         <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>Gender</label>
                                         <select 
@@ -231,99 +210,36 @@ const MyAccount = () => {
                     {/* Right Column: Password Reset Section */}
                     <div className="my-account-security">
                         <h3 style={{fontSize: '1.2rem', fontWeight: '700', marginBottom: '15px', color: '#1e293b'}}>
-                            🔒 Reset Password via OTP
+                            🔒 Change Password
                         </h3>
                         
-                        {otpStep === 1 ? (
-                            <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-                                <div>
-                                    <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>New Password</label>
-                                    <input 
-                                        type="password" 
-                                        className="auth-input" 
-                                        placeholder="Enter new password"
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                    />
-                                </div>
-                                <button 
-                                    type="button" 
-                                    className="auth-btn" 
-                                    style={{
-                                        marginTop: '5px', 
-                                        backgroundColor: '#4f46e5', 
-                                        boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
-                                        opacity: passwordLoading || !newPassword ? 0.7 : 1,
-                                        cursor: passwordLoading || !newPassword ? 'not-allowed' : 'pointer'
-                                    }}
-                                    onClick={handleSendOtp}
-                                    disabled={passwordLoading || !newPassword}
-                                >
-                                    {passwordLoading ? 'Sending...' : 'Send Verification OTP to Email'}
-                                </button>
+                        <form onSubmit={handleChangePassword} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                            <div>
+                                <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>New Password</label>
+                                <input 
+                                    type="password" 
+                                    className="auth-input" 
+                                    placeholder="Enter new password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    required
+                                />
                             </div>
-                        ) : (
-                            <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-                                <div style={{
-                                    backgroundColor: '#eff6ff', 
-                                    border: '1px solid #bfdbfe',
-                                    color: '#1e40af', 
-                                    padding: '12px', 
-                                    borderRadius: '8px', 
-                                    fontSize: '0.9rem',
-                                    lineHeight: '1.4'
-                                }}>
-                                    🔑 OTP code has been sent to <strong>{formData.email}</strong>. Please check your inbox.
-                                </div>
-                                
-                                <div>
-                                    <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>Enter 6-Digit OTP</label>
-                                    <input 
-                                        type="text" 
-                                        className="auth-input" 
-                                        placeholder="e.g. 123456"
-                                        maxLength="6"
-                                        value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
-                                    />
-                                </div>
-                                
-                                <div style={{display: 'flex', gap: '12px', marginTop: '5px'}}>
-                                    <button 
-                                        type="button" 
-                                        className="auth-btn" 
-                                        style={{
-                                            backgroundColor: '#10b981', 
-                                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
-                                            flex: 1, 
-                                            marginTop: '0',
-                                            opacity: passwordLoading || !otp ? 0.7 : 1,
-                                            cursor: passwordLoading || !otp ? 'not-allowed' : 'pointer'
-                                        }}
-                                        onClick={handleVerifyAndReset}
-                                        disabled={passwordLoading || !otp}
-                                    >
-                                        {passwordLoading ? 'Verifying...' : 'Verify & Reset'}
-                                    </button>
-                                    <button 
-                                        type="button" 
-                                        className="auth-btn" 
-                                        style={{
-                                            backgroundColor: '#64748b', 
-                                            boxShadow: '0 4px 12px rgba(100, 116, 139, 0.25)',
-                                            flex: 1, 
-                                            marginTop: '0'
-                                        }}
-                                        onClick={() => {
-                                            setOtpStep(1);
-                                            setOtp('');
-                                        }}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        )}
+                            <button 
+                                type="submit" 
+                                className="auth-btn" 
+                                style={{
+                                    marginTop: '5px', 
+                                    backgroundColor: '#4f46e5', 
+                                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
+                                    opacity: passwordLoading || !newPassword ? 0.7 : 1,
+                                    cursor: passwordLoading || !newPassword ? 'not-allowed' : 'pointer'
+                                }}
+                                disabled={passwordLoading || !newPassword}
+                            >
+                                {passwordLoading ? 'Updating...' : 'Update Password'}
+                            </button>
+                        </form>
                     </div>
 
                 </div>

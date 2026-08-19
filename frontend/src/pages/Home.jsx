@@ -94,7 +94,7 @@ const Home = () => {
                     <div className="process-card">
                         <div className="step-num">1</div>
                         <h3>Create Account</h3>
-                        <p>Register as a Job Seeker and verify your email using a secure one-time passcode (OTP).</p>
+                        <p>Register as a Job Seeker and start discovering career opportunities.</p>
                     </div>
 
                     <div className="process-card">
@@ -124,7 +124,6 @@ const Home = () => {
                     {/* Brand Col */}
                     <div className="footer-col">
                         <div className="footer-brand-header">
-                            <div className="footer-brand-logo">💼</div>
                             <span className="footer-brand-title">Smart Job Portal</span>
                         </div>
                         <p className="footer-brand-desc">
@@ -186,7 +185,7 @@ const Home = () => {
                             </li>
                             <li className="footer-list-item">
                                 <span className="footer-bullet">•</span>
-                                <span className="footer-list-link">OTP Authentication</span>
+                                <span className="footer-list-link">Secure Authentication</span>
                             </li>
                         </ul>
                     </div>

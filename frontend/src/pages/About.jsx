@@ -37,7 +37,7 @@ const About = () => {
                     <div className="process-card">
                         <div className="step-num">🔒</div>
                         <h3>Security</h3>
-                        <p>Equipped with modern OTP authentication and protected routing, your personal details and resumes remain safe.</p>
+                        <p>Equipped with secure authentication and protected routing, your personal details and resumes remain safe.</p>
                     </div>
 
                     <div className="process-card">

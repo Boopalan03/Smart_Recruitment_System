@@ -48,7 +48,7 @@ const PostJob = () => {
                     <input name="title" placeholder="e.g. Senior React Developer" onChange={handleChange} required style={inputStyle} />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <label style={labelStyle}>Company Name</label>
                         <input name="company" placeholder="e.g. TechCorp" onChange={handleChange} required style={inputStyle} />
@@ -59,7 +59,7 @@ const PostJob = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <label style={labelStyle}>Min Salary (₹)</label>
                         <input type="number" name="minSalary" placeholder="50000" onChange={handleChange} required style={inputStyle} />

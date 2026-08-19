@@ -2,18 +2,16 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/authMiddleware'); // ✅ Import Middleware
 const { 
-    register, login, createEmployer, sendOtp, 
-    forgotPassword, resetPassword,
+    register, login, createEmployer, 
+    resetPassword,
     getMe, updateProfile, deleteAccount // ✅ Import New Controllers
 } = require('../controllers/authController');
 
 // Auth Flow
-router.post('/send-otp', sendOtp);
 router.post('/register', register);
 router.post('/login', login);
 
 // Password Reset
-router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 
 // Admin

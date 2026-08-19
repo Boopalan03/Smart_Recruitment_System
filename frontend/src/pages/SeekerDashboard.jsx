@@ -285,7 +285,7 @@ const SeekerDashboard = () => {
                 )}
 
                 {view === 'feed' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
                         {jobs.length > 0 ? (
                             jobs.map(job => {
                                 const hasApplied = myApplications.some(app => app.job?._id === job._id || app.job === job._id);
@@ -353,7 +353,7 @@ const SeekerDashboard = () => {
                         <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
                             My Applications
                         </h2>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px', width: '100%' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', width: '100%' }}>
                         {myApplications.map(app => (
                             <div 
                                 key={app._id} 

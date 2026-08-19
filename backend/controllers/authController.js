@@ -1,33 +1,12 @@
 const User = require('../models/User');
-const Otp = require('../models/Otp');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const sendEmail = require('../utils/sendEmail');
 
 // --- EXISTING AUTH FUNCTIONS ---
 
-exports.sendOtp = async (req, res) => {
-    try {
-        const { email } = req.body;
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ msg: 'User already registered' });
-
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        await Otp.findOneAndUpdate({ email }, { otp, createdAt: Date.now() }, { upsert: true, new: true });
-        await sendEmail(email, otp);
-
-        res.json({ msg: 'OTP sent successfully' });
-    } catch (err) {
-        console.error("sendOtp Error:", err);
-        res.status(500).json({ msg: err.message || 'Failed to send OTP email' });
-    }
-};
-
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, otp, role } = req.body;
-        const validOtp = await Otp.findOne({ email, otp });
-        if (!validOtp) return res.status(400).json({ msg: 'Invalid or Expired OTP' });
+        const { name, email, password, role } = req.body;
 
         let user = await User.findOne({ email });
         if (user) return res.status(400).json({ msg: 'User already exists' });
@@ -38,7 +17,6 @@ exports.register = async (req, res) => {
         const assignedRole = role === 'employer' ? 'employer' : 'seeker';
         user = new User({ name, email, password: hashedPassword, role: assignedRole });
         await user.save();
-        await Otp.deleteOne({ email });
 
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
@@ -73,34 +51,21 @@ exports.createEmployer = async (req, res) => {
     } catch (err) { res.status(500).send('Server Error'); }
 };
 
-exports.forgotPassword = async (req, res) => {
-    try {
-        const { email } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ msg: 'User not found' });
-
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        await Otp.findOneAndUpdate({ email }, { otp, createdAt: Date.now() }, { upsert: true, new: true });
-        await sendEmail(email, otp);
-
-        res.json({ msg: 'OTP sent to email' });
-    } catch (err) {
-        console.error("forgotPassword Error:", err);
-        res.status(500).json({ msg: err.message || 'Failed to send OTP email' });
-    }
-};
-
 exports.resetPassword = async (req, res) => {
     try {
-        const { email, otp, newPassword } = req.body;
-        const validOtp = await Otp.findOne({ email, otp });
-        if (!validOtp) return res.status(400).json({ msg: 'Invalid OTP' });
+        const { email, newPassword } = req.body;
+        if (!email || !newPassword) {
+            return res.status(400).json({ msg: 'Email and new password are required' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ msg: 'User not found' });
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-        await User.findOneAndUpdate({ email }, { password: hashedPassword });
-        await Otp.deleteOne({ email });
+        user.password = hashedPassword;
+        await user.save();
 
         res.json({ msg: 'Password Reset Successfully' });
     } catch (err) { res.status(500).send('Server Error'); }

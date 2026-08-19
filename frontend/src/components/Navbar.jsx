@@ -14,6 +14,14 @@ const Navbar = () => {
     const notifRef = useRef(null);
     const notifButtonRef = useRef(null);
 
+    // Mobile Menu State
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Close mobile menu on route change
+    useEffect(() => {
+        setMobileMenuOpen(false);
+    }, [location]);
+
     // Polling interval & fetch notifications
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -84,7 +92,15 @@ const Navbar = () => {
         <nav className="navbar">
             <Link to="/" className="logo">Smart Job Portal</Link>
             
-            <div className="nav-links">
+            <button 
+                className="mobile-menu-toggle" 
+                aria-label="Toggle navigation menu"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+                {mobileMenuOpen ? '✕' : '☰'}
+            </button>
+
+            <div className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
                 {(!user || user.role !== 'employer') && (
                     <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
                 )}
