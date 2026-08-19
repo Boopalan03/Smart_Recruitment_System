@@ -3,6 +3,27 @@ import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 import CustomModal from '../components/CustomModal';
 
+const getRelativeTime = (dateString) => {
+    if (!dateString) return '';
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffInSeconds = Math.floor((now - past) / 1000);
+
+    if (diffInSeconds < 60) return 'Just now';
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks}w ago`;
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths}mo ago`;
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `${diffInYears}y ago`;
+};
+
 const EmployerDashboard = () => {
     const { user } = useContext(AuthContext);
     const [view, setView] = useState('jobs'); // 'jobs', 'post', 'applicants', 'messages'
@@ -244,7 +265,14 @@ const EmployerDashboard = () => {
                             {jobs.map(job => (
                                 <div key={job._id} className="job-card" style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', marginBottom: 0 }}>
                                     <div>
-                                        <h3 className="job-title" style={{ fontSize: '1.25rem', marginBottom: '8px' }}>{job.title}</h3>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                                            <h3 className="job-title" style={{ fontSize: '1.25rem', marginBottom: '8px' }}>{job.title}</h3>
+                                            {job.createdAt && (
+                                                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', background: '#f1f5f9', padding: '3px 8px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
+                                                    ⏱️ {getRelativeTime(job.createdAt)}
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="company-name" style={{ color: '#4f46e5', fontWeight: '600', marginBottom: '12px' }}>
                                             📍 {job.location} • 💼 {job.jobType}
                                         </div>
@@ -345,9 +373,16 @@ const renderApplicantCard = (app, openResume, handleUpdateStatus, showJobTitle =
         }}
     >
         <div>
-            <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
-                {app.applicant?.name || 'Unknown User'}
-            </h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
+                    {app.applicant?.name || 'Unknown User'}
+                </h4>
+                {app.createdAt && (
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', background: '#f1f5f9', padding: '3px 8px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
+                        ⏱️ {getRelativeTime(app.createdAt)}
+                    </span>
+                )}
+            </div>
             <div style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '6px', wordBreak: 'break-all' }}>
                 ✉️ {app.applicant?.email}
             </div>

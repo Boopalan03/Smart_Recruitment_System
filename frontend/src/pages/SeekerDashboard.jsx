@@ -1,7 +1,23 @@
-import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import API from '../api';
-import CustomModal from '../components/CustomModal';
+const getRelativeTime = (dateString) => {
+    if (!dateString) return '';
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffInSeconds = Math.floor((now - past) / 1000);
+
+    if (diffInSeconds < 60) return 'Just now';
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks}w ago`;
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths}mo ago`;
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `${diffInYears}y ago`;
+};
 
 const SeekerDashboard = () => {
     const [searchParams] = useSearchParams();
@@ -286,13 +302,20 @@ const SeekerDashboard = () => {
 
                 {view === 'feed' && (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
-                        {jobs.length > 0 ? (
-                            jobs.map(job => {
-                                const hasApplied = myApplications.some(app => app.job?._id === job._id || app.job === job._id);
-                                return (
+                        {(() => {
+                            const availableJobs = jobs.filter(job => !myApplications.some(app => app.job?._id === job._id || app.job === job._id));
+                            return availableJobs.length > 0 ? (
+                                availableJobs.map(job => (
                                     <div key={job._id} className="job-card" style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                                         <div>
-                                            <h3 className="job-title" style={{ fontSize: '1.25rem', marginBottom: '8px' }}>{job.title}</h3>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                                                <h3 className="job-title" style={{ fontSize: '1.25rem', marginBottom: '8px' }}>{job.title}</h3>
+                                                {job.createdAt && (
+                                                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', background: '#f1f5f9', padding: '3px 8px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
+                                                        ⏱️ {getRelativeTime(job.createdAt)}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <div className="company-name" style={{ color: '#4f46e5', fontWeight: '600', marginBottom: '12px' }}>
                                                 🏢 {job.company} {job.location && `• 📍 ${job.location}`}
                                             </div>
@@ -308,49 +331,31 @@ const SeekerDashboard = () => {
                                         </div>
 
                                         <div style={{ marginTop: '15px', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
-                                            {hasApplied ? (
-                                                <span style={{ 
-                                                    color: '#16a34a', 
-                                                    fontWeight: '600', 
-                                                    fontSize: '0.95rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    background: '#f0fdf4',
-                                                    padding: '6px 12px',
-                                                    borderRadius: '6px',
-                                                    border: '1px solid #bbf7d0',
-                                                    justifyContent: 'center'
-                                                }}>
-                                                    ✅ Applied
-                                                </span>
-                                            ) : (
-                                                <button 
-                                                    className="btn-primary" 
-                                                    style={{ width: '100%', padding: '10px' }} 
-                                                    onClick={() => setActiveApplyJob(job)}
-                                                >
-                                                    Apply for Job
-                                                </button>
-                                            )}
+                                            <button 
+                                                className="btn-primary" 
+                                                style={{ width: '100%', padding: '10px' }} 
+                                                onClick={() => setActiveApplyJob(job)}
+                                            >
+                                                Apply for Job
+                                            </button>
                                         </div>
                                     </div>
-                                );
-                            })
-                        ) : (
-                            <div className="no-jobs" style={{ gridColumn: '1 / -1' }}>
-                                <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🔍</div>
-                                <h3>No Jobs Found</h3>
-                                <p>Try adjusting or clearing your search filters.</p>
-                                <button 
-                                    className="btn-outline" 
-                                    style={{ marginTop: '15px' }}
-                                    onClick={() => setFilters({location: '', jobType: '', minSalary: 0, search: ''})}
-                                >
-                                    Clear Filters
-                                </button>
-                            </div>
-                        )}
+                                ))
+                            ) : (
+                                <div className="no-jobs" style={{ gridColumn: '1 / -1' }}>
+                                    <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🔍</div>
+                                    <h3>{jobs.length > 0 ? "You Have Applied to All Matching Jobs!" : "No Jobs Found"}</h3>
+                                    <p>{jobs.length > 0 ? "Check back later for new openings or adjust your search filters." : "Try adjusting or clearing your search filters."}</p>
+                                    <button 
+                                        className="btn-outline" 
+                                        style={{ marginTop: '15px' }}
+                                        onClick={() => setFilters({location: '', jobType: '', minSalary: 0, search: ''})}
+                                    >
+                                        Clear Filters
+                                    </button>
+                                </div>
+                            );
+                        })()}
                     </div>
                 )}
 
@@ -373,7 +378,14 @@ const SeekerDashboard = () => {
                                             }` 
                                         }}
                                     >
-                                        <h3 className="job-title">{app.job?.title || 'Job Removed'}</h3>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                                            <h3 className="job-title">{app.job?.title || 'Job Removed'}</h3>
+                                            {app.createdAt && (
+                                                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', background: '#f1f5f9', padding: '3px 8px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
+                                                    ⏱️ {getRelativeTime(app.createdAt)}
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="company-name">{app.job?.company}</div>
                                         
                                         <div style={{ marginTop: '10px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
