@@ -28,12 +28,16 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 
+// Route aliases (handles cases where frontend base URL omits /api)
+app.use('/auth', authRoutes);
+app.use('/jobs', jobRoutes);
+
 // Handle favicon requests cleanly
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-// Default Route
+// Health Check / Default Route
 app.get('/', (req, res) => {
-    res.send('API is running...');
+    res.status(200).json({ message: 'Smart Recruitment API is running successfully' });
 });
 
 const PORT = process.env.PORT || 5000;
