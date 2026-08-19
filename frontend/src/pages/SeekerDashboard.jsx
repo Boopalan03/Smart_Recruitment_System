@@ -1,22 +1,59 @@
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import API from '../api';
+import CustomModal from '../components/CustomModal';
+import { 
+    SearchIcon, 
+    LocationIcon, 
+    SalaryIcon, 
+    BriefcaseIcon, 
+    ClockIcon, 
+    BookmarkIcon, 
+    CloseIcon, 
+    DownloadIcon,
+    InfoIcon,
+    CheckIcon
+} from '../components/Icons';
+
 const getRelativeTime = (dateString) => {
     if (!dateString) return '';
-    const now = new Date();
-    const past = new Date(dateString);
-    const diffInSeconds = Math.floor((now - past) / 1000);
+    try {
+        const past = new Date(dateString);
+        if (isNaN(past.getTime())) return '';
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - past) / 1000);
 
-    if (diffInSeconds < 60) return 'Just now';
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    const diffInWeeks = Math.floor(diffInDays / 7);
-    if (diffInWeeks < 4) return `${diffInWeeks}w ago`;
-    const diffInMonths = Math.floor(diffInDays / 30);
-    if (diffInMonths < 12) return `${diffInMonths}mo ago`;
-    const diffInYears = Math.floor(diffInDays / 365);
-    return `${diffInYears}y ago`;
+        if (diffInSeconds < 60) return 'Just now';
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return `${diffInHours}h ago`;
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) {
+            return diffInDays === 1 ? '1 day ago' : `${diffInDays}d ago`;
+        }
+        
+        const diffInWeeks = Math.floor(diffInDays / 7);
+        if (diffInWeeks < 4) {
+            return diffInWeeks === 1 ? '1 week ago' : `${diffInWeeks}w ago`;
+        }
+        
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 1) {
+            return `${diffInWeeks}w ago`;
+        }
+        if (diffInMonths < 12) {
+            return diffInMonths === 1 ? '1 month ago' : `${diffInMonths}mo ago`;
+        }
+        
+        const diffInYears = Math.floor(diffInDays / 365);
+        return diffInYears <= 1 ? '1 year ago' : `${diffInYears}y ago`;
+    } catch {
+        return '';
+    }
 };
 
 const SeekerDashboard = () => {
@@ -30,6 +67,15 @@ const SeekerDashboard = () => {
     const [modal, setModal] = useState({ isOpen: false, type: 'info', message: '' });
     const [showSidebar, setShowSidebar] = useState(false);
     const [activeApplyJob, setActiveApplyJob] = useState(null);
+    const [bookmarkedJobs, setBookmarkedJobs] = useState(() => {
+        // Hydrate from localStorage if desired
+        try {
+            const saved = localStorage.getItem('bookmarked_jobs');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    });
 
     const filterRef = useRef(null);
     const filterButtonRef = useRef(null);
@@ -58,7 +104,7 @@ const SeekerDashboard = () => {
         };
     }, [showSidebar]);
 
-    // ✅ NEW: State for Locations
+    // State for Locations
     const [locationOptions, setLocationOptions] = useState([]);
 
     const [filters, setFilters] = useState({
@@ -68,29 +114,26 @@ const SeekerDashboard = () => {
         search: ''
     });
 
-    const scrollBoxStyle = {
-        maxHeight: '180px',
-        overflowY: 'auto',
-        overscrollBehavior: 'contain',
-        border: '1px solid #cbd5e1',
-        padding: '10px',
-        borderRadius: '6px',
-        backgroundColor: '#f8fafc',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px'
-    };
-
     // Modal Helpers
     const showModal = (type, message) => setModal({ isOpen: true, type, message });
     const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
-    // ✅ 1. Fetch Locations Dynamically
+    // Toggle Bookmarks locally
+    const handleBookmark = (jobId, event) => {
+        event.stopPropagation();
+        setBookmarkedJobs(prev => {
+            const isBookmarked = prev.includes(jobId);
+            const updated = isBookmarked ? prev.filter(id => id !== jobId) : [...prev, jobId];
+            localStorage.setItem('bookmarked_jobs', JSON.stringify(updated));
+            return updated;
+        });
+    };
+
+    // Fetch Locations Dynamically
     useEffect(() => {
         const fetchLocations = async () => {
             try {
                 const res = await API.get('/jobs/locations');
-                // Filter out empty/null locations just in case
                 const uniqueLocations = res.data.filter(loc => loc); 
                 setLocationOptions(uniqueLocations);
             } catch {
@@ -100,7 +143,7 @@ const SeekerDashboard = () => {
         fetchLocations();
     }, []); // Runs once on mount
 
-    // 2. Fetch Jobs (Based on Filters)
+    // Fetch Jobs (Based on Filters)
     useEffect(() => {
         if (view === 'feed') {
             const fetchJobs = async () => {
@@ -132,7 +175,7 @@ const SeekerDashboard = () => {
         }
     };
 
-    // 3. Fetch Applications on Mount or View Change
+    // Fetch Applications on Mount or View Change
     useEffect(() => {
         fetchMyApps();
     }, [view]);
@@ -177,43 +220,89 @@ const SeekerDashboard = () => {
         }
     };
 
+    const getCompanyInitials = (name) => {
+        if (!name) return 'C';
+        const parts = name.split(' ');
+        if (parts.length > 1) {
+            return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+        }
+        return name.slice(0, 2).toUpperCase();
+    };
+
+    const renderApplicationTimeline = (status) => {
+        const isPending = status === 'pending';
+        const isAccepted = status === 'accepted';
+        const isRejected = status === 'rejected';
+
+        return (
+            <div className="app-timeline">
+                <div className="timeline-step completed">
+                    <div className="timeline-dot">1</div>
+                    <div className="timeline-label">Applied</div>
+                </div>
+                <div className={`timeline-step ${!isPending ? 'completed' : 'active'}`}>
+                    <div className="timeline-dot">2</div>
+                    <div className="timeline-label">Reviewed</div>
+                </div>
+                {isAccepted && (
+                    <div className="timeline-step completed accepted">
+                        <div className="timeline-dot"><CheckIcon size={12} color="white" /></div>
+                        <div className="timeline-label" style={{ color: 'var(--success)' }}>Accepted</div>
+                    </div>
+                )}
+                {isRejected && (
+                    <div className="timeline-step completed rejected">
+                        <div className="timeline-dot">✖</div>
+                        <div className="timeline-label" style={{ color: 'var(--danger)' }}>Rejected</div>
+                    </div>
+                )}
+                {isPending && (
+                    <div className="timeline-step active">
+                        <div className="timeline-dot">⌛</div>
+                        <div className="timeline-label" style={{ color: 'var(--warning)' }}>Under Review</div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="container">
-            {/* Sidebar is now a floating pop-up inside the search-bar-container */}
-
             <div className="feed">
                 {view === 'feed' && (
-                    <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
-                        Find My Job
-                    </h2>
+                    <div className="feed-header">
+                        <h2 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--heading)', marginBottom: '6px' }}>
+                            Find your next opportunity
+                        </h2>
+                        <p style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
+                            Search thousands of jobs based on your skills, location, and experience.
+                        </p>
+                    </div>
                 )}
 
                 {view === 'feed' && (
                     <div className="search-bar-container" style={{ position: 'relative', zIndex: 10 }}>
-                        <input 
-                            type="text" 
-                            className="search-input" 
-                            placeholder="🔍 Search jobs by title, company, or keyword..." 
-                            value={filters.search}
-                            onChange={(e) => setFilters({...filters, search: e.target.value})}
-                        />
+                        <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ position: 'absolute', left: '16px', color: 'var(--muted)' }}><SearchIcon size={20} /></span>
+                            <input 
+                                type="text" 
+                                className="search-input" 
+                                style={{ paddingLeft: '48px' }}
+                                placeholder="Search jobs by title, company, or keyword..." 
+                                value={filters.search}
+                                onChange={(e) => setFilters({...filters, search: e.target.value})}
+                            />
+                        </div>
                         <button 
                             ref={filterButtonRef}
                             type="button"
+                            className="btn-outline"
                             onClick={() => setShowSidebar(!showSidebar)}
                             style={{
-                                background: showSidebar ? '#4f46e5' : 'transparent',
-                                border: '1px solid #4f46e5',
-                                borderRadius: '8px',
-                                padding: '10px 16px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                color: showSidebar ? '#ffffff' : '#4f46e5',
-                                fontWeight: '600',
-                                transition: 'all 0.2s ease',
-                                boxShadow: showSidebar ? '0 4px 12px rgba(79, 70, 229, 0.25)' : 'none'
+                                background: showSidebar ? 'var(--primary)' : 'var(--surface)',
+                                color: showSidebar ? 'white' : 'var(--primary)',
+                                borderColor: 'var(--primary)',
+                                transition: 'var(--transition)'
                             }}
                         >
                             <span>🎛️</span>
@@ -224,23 +313,25 @@ const SeekerDashboard = () => {
                         {showSidebar && (
                             <div ref={filterRef} className="sidebar" style={{
                                 position: 'absolute',
-                                top: 'calc(100% + 10px)',
+                                top: 'calc(100% + 12px)',
                                 right: 0,
                                 zIndex: 999,
-                                width: '310px',
-                                background: 'white',
-                                boxShadow: '0 15px 30px rgba(15, 23, 42, 0.15), 0 5px 15px rgba(15, 23, 42, 0.1)',
-                                border: '1px solid #cbd5e1',
+                                width: '320px',
+                                background: 'var(--surface)',
+                                border: '1px solid var(--border)',
+                                borderRadius: 'var(--radius)',
+                                boxShadow: '0 20px 40px rgba(15, 23, 42, 0.12)',
+                                padding: '24px',
                                 textAlign: 'left'
                             }}>
-                                <div className="filter-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="filter-header">
                                     <span>Filters</span>
                                     <button 
                                         type="button" 
                                         onClick={() => setShowSidebar(false)}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#64748b' }}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--muted)' }}
                                     >
-                                        ✖
+                                        <CloseIcon size={20} />
                                     </button>
                                 </div>
 
@@ -259,39 +350,41 @@ const SeekerDashboard = () => {
                                 </div>
 
                                 <div className="filter-group">
-                                    <h4>Min Salary: ₹{filters.minSalary}</h4>
+                                    <h4 style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span>Min Salary</span>
+                                        <span style={{ color: 'var(--primary)', textTransform: 'none' }}>₹{filters.minSalary}</span>
+                                    </h4>
                                     <input 
                                         type="range" min="0" max="200000" step="10000"
                                         value={filters.minSalary}
-                                        onChange={(e) => setFilters({...filters, minSalary: e.target.value})}
+                                        onChange={(e) => setFilters({...filters, minSalary: Number(e.target.value)})}
                                     />
                                 </div>
 
                                 <div className="filter-group">
                                     <h4>Location</h4>
-                                    <div style={scrollBoxStyle}>
+                                    <div className="filter-scroll-list">
                                         {locationOptions.length > 0 ? (
                                             locationOptions.map((loc) => (
-                                                <label key={loc} className="checkbox-label" style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                                                <label key={loc} className="checkbox-label" style={{ cursor: 'pointer' }}>
                                                     <input 
                                                         type="checkbox" 
                                                         checked={filters.location === loc}
                                                         onChange={() => handleFilterChange('location', loc)}
-                                                        style={{ cursor: 'pointer' }}
                                                     />
-                                                    <span style={{ fontSize: '14px', color: '#334155' }}>{loc}</span>
+                                                    <span>{loc}</span>
                                                 </label>
                                             ))
                                         ) : (
-                                            <div style={{fontSize: '0.85rem', color: '#94a3b8', textAlign: 'center'}}>Loading...</div>
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--muted)', textAlign: 'center', padding: '10px' }}>No active locations</div>
                                         )}
                                     </div>
                                 </div>
 
                                 <button 
                                     className="btn-outline" 
-                                    style={{width: '100%', marginTop: '10px'}}
-                                    onClick={() => setFilters({location: '', jobType: '', minSalary: 0, search: ''})}
+                                    style={{ width: '100%', marginTop: '10px' }}
+                                    onClick={() => setFilters({ location: '', jobType: '', minSalary: 0, search: '' })}
                                 >
                                     Clear Filters
                                 </button>
@@ -301,55 +394,88 @@ const SeekerDashboard = () => {
                 )}
 
                 {view === 'feed' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
                         {(() => {
-                            const availableJobs = jobs.filter(job => !myApplications.some(app => app.job?._id === job._id || app.job === job._id));
-                            return availableJobs.length > 0 ? (
-                                availableJobs.map(job => (
-                                    <div key={job._id} className="job-card" style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-                                        <div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                                                <h3 className="job-title" style={{ fontSize: '1.25rem', marginBottom: '8px' }}>{job.title}</h3>
-                                                {job.createdAt && (
-                                                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', background: '#f1f5f9', padding: '3px 8px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
-                                                        ⏱️ {getRelativeTime(job.createdAt)}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="company-name" style={{ color: '#4f46e5', fontWeight: '600', marginBottom: '12px' }}>
-                                                🏢 {job.company} {job.location && `• 📍 ${job.location}`}
-                                            </div>
-                                            
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px' }}>
-                                                <span className="meta-item" style={{ background: '#f1f5f9', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '500' }}>
-                                                    💰 ₹{typeof job.minSalary === 'number' || typeof job.minSalary === 'string' ? job.minSalary : (job.salary && typeof job.salary === 'object' ? `${job.salary.min || ''} - ${job.salary.max || ''}` : job.salary || 'N/A')}
-                                                </span>
-                                                <span className="meta-item" style={{ background: '#f1f5f9', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '500' }}>
-                                                    💼 {job.jobType || 'Full-time'}
-                                                </span>
-                                            </div>
-                                        </div>
+                            const safeJobs = Array.isArray(jobs) ? jobs : [];
+                            const safeApps = Array.isArray(myApplications) ? myApplications : [];
+                            const availableJobs = safeJobs.filter(job => {
+                                if (!job || !job._id) return false;
+                                return !safeApps.some(app => {
+                                    if (!app) return false;
+                                    const appJobId = typeof app.job === 'object' ? app.job?._id : app.job;
+                                    return appJobId && String(appJobId) === String(job._id);
+                                });
+                            });
 
-                                        <div style={{ marginTop: '15px', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
-                                            <button 
-                                                className="btn-primary" 
-                                                style={{ width: '100%', padding: '10px' }} 
-                                                onClick={() => setActiveApplyJob(job)}
-                                            >
-                                                Apply for Job
-                                            </button>
+                            return availableJobs.length > 0 ? (
+                                availableJobs.map(job => {
+                                    const isBookmarked = bookmarkedJobs.includes(job._id);
+                                    return (
+                                        <div key={job._id} className="job-card">
+                                            <div>
+                                                <div className="job-card-header">
+                                                    <div className="company-logo-placeholder">
+                                                        {getCompanyInitials(job.company)}
+                                                    </div>
+                                                    <div className="job-title-row">
+                                                        <h3 className="job-title">{job.title}</h3>
+                                                        <div className="company-name-row">
+                                                            <span>{job.company}</span>
+                                                            {job.location && (
+                                                                <>
+                                                                    <span>•</span>
+                                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                                                        <LocationIcon size={12} /> {job.location}
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <button 
+                                                        onClick={(e) => handleBookmark(job._id, e)}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: isBookmarked ? 'var(--primary)' : 'var(--muted)', display: 'flex', alignItems: 'center', transition: 'var(--transition)' }}
+                                                        title={isBookmarked ? "Remove Bookmark" : "Bookmark Job"}
+                                                    >
+                                                        <BookmarkIcon size={20} fill={isBookmarked ? "var(--primary)" : "none"} />
+                                                    </button>
+                                                </div>
+                                                
+                                                <div className="job-meta-row">
+                                                    <span className="meta-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                        <SalaryIcon size={12} color="var(--primary)" /> ₹{typeof job.minSalary === 'number' || typeof job.minSalary === 'string' ? job.minSalary : (job.salary && typeof job.salary === 'object' ? `${job.salary.min || ''} - ${job.salary.max || ''}` : job.salary || 'N/A')}
+                                                    </span>
+                                                    <span className="meta-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                        <BriefcaseIcon size={12} color="var(--primary)" /> {job.jobType || 'Full-time'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="job-card-footer">
+                                                {job.createdAt ? (
+                                                    <span className="posted-time" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                        <ClockIcon size={12} /> {getRelativeTime(job.createdAt)}
+                                                    </span>
+                                                ) : <span />}
+                                                <button 
+                                                    className="btn-primary" 
+                                                    style={{ padding: '8px 16px', fontSize: '0.88rem' }} 
+                                                    onClick={() => setActiveApplyJob(job)}
+                                                >
+                                                    Apply Now
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             ) : (
                                 <div className="no-jobs" style={{ gridColumn: '1 / -1' }}>
-                                    <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🔍</div>
-                                    <h3>{jobs.length > 0 ? "You Have Applied to All Matching Jobs!" : "No Jobs Found"}</h3>
-                                    <p>{jobs.length > 0 ? "Check back later for new openings or adjust your search filters." : "Try adjusting or clearing your search filters."}</p>
+                                    <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🔍</div>
+                                    <h3>{safeJobs.length > 0 ? "You're All Caught Up!" : "No Jobs Found"}</h3>
+                                    <p>{safeJobs.length > 0 ? "You have applied to all matching jobs. Check back later or adjust your search filters." : "We couldn't find any jobs matching your current search terms. Try clearing or expanding your filters."}</p>
                                     <button 
                                         className="btn-outline" 
-                                        style={{ marginTop: '15px' }}
-                                        onClick={() => setFilters({location: '', jobType: '', minSalary: 0, search: ''})}
+                                        style={{ marginTop: '10px' }}
+                                        onClick={() => setFilters({ location: '', jobType: '', minSalary: 0, search: '' })}
                                     >
                                         Clear Filters
                                     </button>
@@ -361,73 +487,80 @@ const SeekerDashboard = () => {
 
                 {view === 'applications' && (
                     <>
-                        <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
-                            My Applications
-                        </h2>
+                        <div className="feed-header">
+                            <h2 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--heading)', marginBottom: '6px' }}>
+                                My Applications
+                            </h2>
+                            <p style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
+                                Track and manage the real-time status of your submitted job applications.
+                            </p>
+                        </div>
+                        
                         {myApplications.length > 0 ? (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', width: '100%' }}>
-                                {myApplications.map(app => (
-                                    <div 
-                                        key={app._id} 
-                                        className="job-card" 
-                                        style={{ 
-                                            marginBottom: '0',
-                                            borderLeft: `5px solid ${
-                                                app.status === 'accepted' ? '#22c55e' : 
-                                                app.status === 'rejected' ? '#ef4444' : '#fbbf24'
-                                            }` 
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                                            <h3 className="job-title">{app.job?.title || 'Job Removed'}</h3>
-                                            {app.createdAt && (
-                                                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', background: '#f1f5f9', padding: '3px 8px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
-                                                    ⏱️ {getRelativeTime(app.createdAt)}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px', width: '100%' }}>
+                                {myApplications.map(app => {
+                                    const appStatus = app.status || 'pending';
+                                    return (
+                                        <div 
+                                            key={app._id} 
+                                            className={`app-tracker-card app-status-${appStatus}`}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <div>
+                                                    <h3 className="job-title" style={{ fontSize: '1.2rem', marginBottom: '4px' }}>
+                                                        {app.job?.title || 'Job Listing (Archived)'}
+                                                    </h3>
+                                                    <div style={{ color: 'var(--muted)', fontSize: '0.9rem', fontWeight: '500' }}>
+                                                        {app.job?.company || 'Company Listing'}
+                                                    </div>
+                                                </div>
+                                                {app.createdAt && (
+                                                    <span className="posted-time" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--background)', padding: '4px 8px', borderRadius: '30px' }}>
+                                                        <ClockIcon size={12} /> {getRelativeTime(app.createdAt)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            
+                                            {/* Status Banner */}
+                                            <div className={`app-status-banner ${appStatus}`}>
+                                                <span style={{ textTransform: 'capitalize', fontWeight: '700' }}>
+                                                    {appStatus === 'accepted' ? '🟢 Accepted' : appStatus === 'rejected' ? '🔴 Rejected' : '🟡 Under Review'}
                                                 </span>
-                                            )}
-                                        </div>
-                                        <div className="company-name">{app.job?.company}</div>
-                                        
-                                        <div style={{ marginTop: '10px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                                            {/* Status Text */}
-                                            <div style={{ marginBottom: '5px' }}>
-                                                <strong>Status: </strong> 
-                                                <span style={{ 
-                                                    textTransform: 'capitalize', 
-                                                    fontWeight: 'bold', 
-                                                    color: app.status === 'accepted' ? '#15803d' : 
-                                                        app.status === 'rejected' ? '#b91c1c' : '#b45309'
-                                                }}>
-                                                    {app.status}
-                                                </span>
+                                                {appStatus === 'accepted' && (
+                                                    <p style={{ fontSize: '0.82rem', marginTop: '4px', color: '#047857', fontWeight: '500' }}>
+                                                        You will receive an email shortly regarding the next steps in the interview.
+                                                    </p>
+                                                )}
+                                                {appStatus === 'rejected' && (
+                                                    <p style={{ fontSize: '0.82rem', marginTop: '4px', color: '#B91C1C', fontWeight: '500' }}>
+                                                        Thank you for applying. We encourage you to apply for other matching roles.
+                                                    </p>
+                                                )}
+                                                {appStatus === 'pending' && (
+                                                    <p style={{ fontSize: '0.82rem', marginTop: '4px', color: '#B45309', fontWeight: '500' }}>
+                                                        The hiring team is currently reviewing your resume and credentials.
+                                                    </p>
+                                                )}
                                             </div>
 
-                                            {/* Show Message ONLY if Accepted */}
-                                            {app.status === 'accepted' && (
-                                                <div style={{ fontSize: '0.9rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    📩 <span>You will receive an email shortly regarding next steps.</span>
-                                                </div>
-                                            )}
+                                            {/* Interactive Visual Timeline */}
+                                            {renderApplicationTimeline(appStatus)}
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="no-jobs" style={{ width: '100%', padding: '60px 20px' }}>
                                 <div style={{ fontSize: '3.2rem', marginBottom: '12px' }}>📋</div>
-                                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
-                                    No Applications Found
-                                </h3>
-                                <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: '420px', margin: '0 auto 24px auto', lineHeight: '1.6' }}>
-                                    You haven't submitted any job applications yet. Start exploring open positions and submit your application!
-                                </p>
+                                <h3>No Applications Found</h3>
+                                <p>You haven't submitted any job applications yet. Start exploring active opportunities and submit your profile today!</p>
                                 <button 
                                     className="btn-primary"
                                     onClick={() => {
                                         setView('feed');
                                         window.history.pushState(null, '', '/dashboard?tab=feed');
                                     }}
-                                    style={{ padding: '12px 26px', fontSize: '0.95rem', fontWeight: '600' }}
+                                    style={{ padding: '12px 26px', fontSize: '0.95rem' }}
                                 >
                                     🔍 Find My Job
                                 </button>
@@ -442,45 +575,51 @@ const SeekerDashboard = () => {
             {/* JOB APPLICATION MODAL POPUP */}
             {activeApplyJob && (
                 <div className="modal-overlay" onClick={() => { setActiveApplyJob(null); handleRemoveFile(activeApplyJob._id); }}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '95%', padding: '30px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.5)' }}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '95%' }}>
                         
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-                            <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>Apply for {activeApplyJob.title}</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 16px 24px', borderBottom: '1px solid var(--border)' }}>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--heading)', margin: 0 }}>
+                                Apply for {activeApplyJob.title}
+                            </h3>
                             <button 
                                 type="button" 
                                 onClick={() => { setActiveApplyJob(null); handleRemoveFile(activeApplyJob._id); }} 
-                                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', display: 'flex', alignItems: 'center' }}
                             >
-                                ✖
+                                <CloseIcon size={20} />
                             </button>
                         </div>
 
-                        <div style={{ maxHeight: 'calc(80vh - 150px)', overflowY: 'auto', paddingRight: '5px', textAlign: 'left' }}>
-                            <div style={{ marginBottom: '15px' }}>
-                                <span style={{ color: '#4f46e5', fontWeight: '700', fontSize: '1.1rem' }}>🏢 {activeApplyJob.company}</span>
-                                {activeApplyJob.location && <span style={{ color: '#64748b', fontSize: '1rem', marginLeft: '10px' }}>📍 {activeApplyJob.location}</span>}
+                        <div className="modal-body" style={{ textAlign: 'left', padding: '24px', maxHeight: 'calc(80vh - 150px)', overflowY: 'auto' }}>
+                            <div style={{ marginBottom: '1.25rem' }}>
+                                <span style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '1.1rem' }}>🏢 {activeApplyJob.company}</span>
+                                {activeApplyJob.location && <span style={{ color: 'var(--muted)', fontSize: '0.95rem', marginLeft: '10px' }}>📍 {activeApplyJob.location}</span>}
                             </div>
 
-                            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                                <span className="meta-item" style={{ background: '#f1f5f9', padding: '6px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '500' }}>
-                                    💰 ₹{typeof activeApplyJob.minSalary === 'number' || typeof activeApplyJob.minSalary === 'string' ? activeApplyJob.minSalary : (activeApplyJob.salary && typeof activeApplyJob.salary === 'object' ? `${activeApplyJob.salary.min || ''} - ${activeApplyJob.salary.max || ''}` : activeApplyJob.salary || 'N/A')}
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
+                                <span className="meta-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                    <SalaryIcon size={12} color="var(--primary)" /> ₹{typeof activeApplyJob.minSalary === 'number' || typeof activeApplyJob.minSalary === 'string' ? activeApplyJob.minSalary : (activeApplyJob.salary && typeof activeApplyJob.salary === 'object' ? `${activeApplyJob.salary.min || ''} - ${activeApplyJob.salary.max || ''}` : activeApplyJob.salary || 'N/A')}
                                 </span>
-                                <span className="meta-item" style={{ background: '#f1f5f9', padding: '6px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '500' }}>
-                                    💼 {activeApplyJob.jobType || 'Full-time'}
+                                <span className="meta-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                    <BriefcaseIcon size={12} color="var(--primary)" /> {activeApplyJob.jobType || 'Full-time'}
                                 </span>
                             </div>
 
-                            <div style={{ marginBottom: '24px' }}>
-                                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#0f172a', marginBottom: '8px' }}>Job Description</h4>
-                                <p style={{ fontSize: '0.92rem', color: '#475569', whiteSpace: 'pre-line', lineHeight: '1.6', background: '#f8fafc', padding: '15px', borderRadius: '10px', border: '1px solid #e2e8f0', maxHeight: '200px', overflowY: 'auto' }}>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--heading)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <InfoIcon size={16} color="var(--primary)" /> Job Description
+                                </h4>
+                                <p style={{ fontSize: '0.9rem', color: 'var(--text)', whiteSpace: 'pre-line', lineHeight: '1.6', background: 'var(--background)', padding: '15px', borderRadius: '10px', border: '1px solid var(--border)', maxHeight: '180px', overflowY: 'auto' }}>
                                     {activeApplyJob.description}
                                 </p>
                             </div>
 
-                            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '20px' }}>
-                                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#0f172a', marginBottom: '10px' }}>Upload Your Resume</h4>
+                            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+                                <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--heading)', marginBottom: '10px' }}>
+                                    Upload Your Resume
+                                </h4>
                                 
-                                <div className="file-upload-wrapper" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                <div className="file-upload-wrapper">
                                     <input 
                                         id={`file-input-${activeApplyJob._id}`}
                                         type="file" accept=".pdf,.doc,.docx" className="hidden-input"
@@ -500,22 +639,24 @@ const SeekerDashboard = () => {
                                             }
                                         }}
                                     />
-                                    <label id={`file-label-${activeApplyJob._id}`} htmlFor={`file-input-${activeApplyJob._id}`} className="custom-file-btn" style={{ width: '100%', textAlign: 'center', display: 'block', padding: '12px', cursor: 'pointer' }}>
-                                        📁 Upload Resume
+                                    <label id={`file-label-${activeApplyJob._id}`} htmlFor={`file-input-${activeApplyJob._id}`} className="custom-file-btn">
+                                        <DownloadIcon size={24} color="var(--primary)" />
+                                        <span>Click to browse and upload resume</span>
+                                        <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--muted)' }}>Supports PDF, DOC, DOCX up to 5MB</span>
                                     </label>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-                                        <span id={`file-name-${activeApplyJob._id}`} className="file-name-display" style={{ fontSize: '0.82rem', color: '#64748b' }}>No file chosen</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px', background: 'var(--background)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                        <span id={`file-name-${activeApplyJob._id}`} style={{ fontSize: '0.82rem', color: 'var(--text)', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>No file chosen</span>
                                         <button id={`remove-btn-${activeApplyJob._id}`} type="button" className="remove-file-btn" onClick={() => handleRemoveFile(activeApplyJob._id)} style={{ display: 'none' }}>✖</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="modal-actions" style={{ display: 'flex', gap: '12px', marginTop: '25px', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
-                            <button className="btn-primary" style={{ flex: 1, padding: '12px', fontSize: '1rem' }} onClick={() => handleApply(activeApplyJob._id)}>
+                        <div className="modal-actions">
+                            <button className="btn-primary" style={{ flex: 1, padding: '12px' }} onClick={() => handleApply(activeApplyJob._id)}>
                                 Submit Application
                             </button>
-                            <button className="btn-outline" style={{ padding: '12px 20px', fontSize: '1rem' }} onClick={() => { setActiveApplyJob(null); handleRemoveFile(activeApplyJob._id); }}>
+                            <button className="btn-outline" style={{ padding: '12px 20px' }} onClick={() => { setActiveApplyJob(null); handleRemoveFile(activeApplyJob._id); }}>
                                 Cancel
                             </button>
                         </div>
@@ -523,8 +664,6 @@ const SeekerDashboard = () => {
                     </div>
                 </div>
             )}
-
-            <CustomModal isOpen={modal.isOpen} type={modal.type} message={modal.message} onClose={closeModal} />
         </div>
     );
 };

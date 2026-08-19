@@ -21,46 +21,51 @@ const Login = () => {
         }
     };
 
-
     return (
-        <div className="auth-container">
-            <h2 className="auth-title">Login</h2>
-            
-            <form onSubmit={handleSubmit} className="auth-form">
-                <div>
-                    <label style={{display: 'block', marginBottom: '5px', fontSize:'0.9rem', fontWeight:'500'}}>Email Address</label>
-                    <input 
-                        type="email" placeholder="Enter your email" className="auth-input"
-                        onChange={(e) => setFormData({...formData, email: e.target.value})} required 
-                    />
-                </div>
+        <div className="auth-wrapper">
+            <div className="auth-container">
+                <h2 className="auth-title">Welcome Back</h2>
+                <p className="auth-subtitle">Login to access your recruitment dashboard</p>
                 
-                <div>
-                    <label style={{display: 'block', marginBottom: '5px', fontSize:'0.9rem', fontWeight:'500'}}>Password</label>
-                    <input 
-                        type="password" placeholder="Enter your password" className="auth-input"
-                        onChange={(e) => setFormData({...formData, password: e.target.value})} required 
-                    />
+                <form onSubmit={handleSubmit} className="auth-form">
+                    <div className="auth-form-group">
+                        <label className="auth-label">Email Address</label>
+                        <input 
+                            type="email" 
+                            placeholder="name@company.com" 
+                            className="auth-input"
+                            onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                            required 
+                        />
+                    </div>
+                    
+                    <div className="auth-form-group">
+                        <label className="auth-label">Password</label>
+                        <input 
+                            type="password" 
+                            placeholder="Enter your password" 
+                            className="auth-input"
+                            onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                            required 
+                        />
+                    </div>
+
+                    <div style={{ textAlign: 'right', marginTop: '-4px' }}>
+                        <Link to="/forgot-password" style={{ color: 'var(--muted)', fontSize: '0.85rem', textDecoration: 'none', fontWeight: '500' }} onMouseEnter={e => e.target.style.color = 'var(--primary)'} onMouseLeave={e => e.target.style.color = 'var(--muted)'}>
+                            Forgot Password?
+                        </Link>
+                    </div>
+
+                    <button type="submit" className="auth-btn">Login</button>
+                </form>
+
+                <div className="auth-separator">OR</div>
+
+                <div className="auth-footer">
+                    Don't have an account? 
+                    <Link to="/register" className="auth-link">Register</Link>
                 </div>
-
-                <div style={{textAlign: 'right', marginBottom: '5px'}}>
-                    <Link to="/forgot-password" style={{color: '#64748b', fontSize: '0.85rem', textDecoration: 'none'}}>
-                        Forgot Password?
-                    </Link>
-                </div>
-
-                <button type="submit" className="auth-btn">Login</button>
-            </form>
-
-            <div className="auth-separator">OR</div>
-
-            
-
-            <div className="auth-footer">
-                Don't have an account? 
-                <Link to="/register" className="auth-link">Register</Link>
             </div>
-
         </div>
     );
 };

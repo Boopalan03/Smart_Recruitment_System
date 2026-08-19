@@ -120,63 +120,70 @@ const MyAccount = () => {
         });
     };
 
-    if (loading) return <div style={{textAlign:'center', marginTop:'50px'}}>Loading Profile...</div>;
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                <div style={{ fontSize: '1.1rem', color: 'var(--muted)', fontWeight: '600' }}>Loading Profile...</div>
+            </div>
+        );
+    }
+
+    const isEmployer = user?.role === 'employer';
 
     return (
-        <div className="container" style={{justifyContent: 'center'}}>
-            <div className="auth-container" style={{maxWidth: '900px', width: '100%'}}>
-                <h2 className="auth-title">
-                    {user?.role === 'employer' ? 'Company Profile' : 'My Account'}
+        <div className="container" style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="auth-container" style={{ maxWidth: '960px', width: '100%', padding: '40px' }}>
+                <h2 className="auth-title" style={{ textAlign: 'left', marginBottom: '8px' }}>
+                    {isEmployer ? 'Company Profile' : 'Account Settings'}
                 </h2>
+                <p style={{ color: 'var(--muted)', fontSize: '0.95rem', marginBottom: '32px' }}>
+                    Update your account details and manage credentials.
+                </p>
                 
                 <div className="my-account-grid">
-                    
                     {/* Left Column: Profile Details */}
-                    <div>
-                        <h3 style={{fontSize: '1.2rem', fontWeight: '700', marginBottom: '15px', color: '#1e293b'}}>
-                            👤 Profile Details
+                    <div style={{ background: 'var(--surface)', paddingRight: '20px' }}>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '20px', color: 'var(--heading)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span>👤</span> Personal Details
                         </h3>
                         <form onSubmit={handleUpdate} className="auth-form">
-                            
-                            {/* Name / Company Name */}
-                            <div>
-                                <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>
-                                    {user?.role === 'employer' ? 'Company Name' : 'Full Name'}
+                            <div className="auth-form-group">
+                                <label className="auth-label">
+                                    {isEmployer ? 'Company Name' : 'Full Name'}
                                 </label>
                                 <input 
-                                    type="text" className="auth-input"
+                                    type="text" 
+                                    className="auth-input"
                                     value={formData.name}
                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                                 />
                             </div>
 
-                            {/* Email (Read Only) */}
-                            <div>
-                                <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>Email (Cannot Change)</label>
+                            <div className="auth-form-group">
+                                <label className="auth-label">Email (Cannot Change)</label>
                                 <input 
-                                    type="email" className="auth-input"
+                                    type="email" 
+                                    className="auth-input"
                                     value={formData.email}
                                     disabled
-                                    style={{backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed'}}
                                 />
                             </div>
 
-                            {/* Contact Number */}
-                            <div>
-                                <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>Contact Number</label>
+                            <div className="auth-form-group">
+                                <label className="auth-label">Contact Number</label>
                                 <input 
-                                    type="text" className="auth-input"
+                                    type="text" 
+                                    className="auth-input"
                                     placeholder="+91 9876543210"
                                     value={formData.contact}
                                     onChange={(e) => setFormData({...formData, contact: e.target.value})}
                                 />
                             </div>
 
-                            {/* ✅ ONLY SHOW GENDER & DOB FOR SEEKERS */}
-                            {(user?.role === 'seeker' || user?.role === 'jobseeker') && (
-                                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px'}}>
-                                    <div>
-                                        <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>Gender</label>
+                            {!isEmployer && (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
+                                    <div className="auth-form-group">
+                                        <label className="auth-label">Gender</label>
                                         <select 
                                             className="auth-input"
                                             value={formData.gender}
@@ -189,10 +196,11 @@ const MyAccount = () => {
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>Date of Birth</label>
+                                    <div className="auth-form-group">
+                                        <label className="auth-label">Date of Birth</label>
                                         <input 
-                                            type="date" className="auth-input"
+                                            type="date" 
+                                            className="auth-input"
                                             value={formData.dob}
                                             onChange={(e) => setFormData({...formData, dob: e.target.value})}
                                         />
@@ -200,26 +208,25 @@ const MyAccount = () => {
                                 </div>
                             )}
 
-                            <button type="submit" className="auth-btn" style={{marginTop:'20px'}}>
+                            <button type="submit" className="btn-primary" style={{ marginTop: '10px', width: 'fit-content' }}>
                                 Save Changes
                             </button>
-
                         </form>
                     </div>
 
-                    {/* Right Column: Password Reset Section */}
-                    <div className="my-account-security">
-                        <h3 style={{fontSize: '1.2rem', fontWeight: '700', marginBottom: '15px', color: '#1e293b'}}>
-                            🔒 Change Password
+                    {/* Right Column: Security Section */}
+                    <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '40px' }} className="my-account-security-wrapper">
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '20px', color: 'var(--heading)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span>🔒</span> Security & Credentials
                         </h3>
                         
-                        <form onSubmit={handleChangePassword} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-                            <div>
-                                <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>New Password</label>
+                        <form onSubmit={handleChangePassword} className="auth-form" style={{ gap: '20px' }}>
+                            <div className="auth-form-group">
+                                <label className="auth-label">New Password</label>
                                 <input 
                                     type="password" 
                                     className="auth-input" 
-                                    placeholder="Enter new password"
+                                    placeholder="Define a new password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     required
@@ -227,11 +234,9 @@ const MyAccount = () => {
                             </div>
                             <button 
                                 type="submit" 
-                                className="auth-btn" 
+                                className="btn-primary" 
                                 style={{
-                                    marginTop: '5px', 
-                                    backgroundColor: '#4f46e5', 
-                                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
+                                    width: 'fit-content',
                                     opacity: passwordLoading || !newPassword ? 0.7 : 1,
                                     cursor: passwordLoading || !newPassword ? 'not-allowed' : 'pointer'
                                 }}
@@ -241,23 +246,22 @@ const MyAccount = () => {
                             </button>
                         </form>
                     </div>
-
                 </div>
 
-                <hr style={{margin: '35px 0', border: '0', borderTop: '1px solid #e2e8f0'}} />
+                <hr style={{ margin: '40px 0', border: '0', borderTop: '1px solid var(--border)' }} />
                 
-                <div style={{display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap'}}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
                     <button 
                         onClick={logout} 
-                        className="auth-btn" 
-                        style={{backgroundColor: '#475569', boxShadow: '0 4px 12px rgba(71, 85, 105, 0.2)', marginTop:'0', width: 'auto', padding: '12px 30px'}}
+                        className="btn-outline" 
+                        style={{ padding: '12px 24px' }}
                     >
-                        Logout
+                        Sign Out
                     </button>
                     <button 
                         onClick={handleDeleteAccount} 
-                        className="auth-btn" 
-                        style={{backgroundColor: '#ef4444', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)', marginTop:'0', width: 'auto', padding: '12px 30px'}}
+                        className="btn-danger" 
+                        style={{ padding: '12px 24px' }}
                     >
                         Delete Account
                     </button>

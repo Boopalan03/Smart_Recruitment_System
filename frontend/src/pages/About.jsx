@@ -6,24 +6,29 @@ const About = () => {
     return (
         <div className="landing-container" style={{ animation: 'fadeIn 0.6s ease-out' }}>
             {/* 1. HERO SECTION */}
-            <div className="landing-hero" style={{ padding: '60px 40px' }}>
-                <div className="hero-badge">About Our Platform</div>
-                <h1>Empowering Connections via the <br /><span>Smart Recruitment System</span></h1>
-                <p className="hero-text" style={{ fontSize: '1.1rem', marginBottom: '24px' }}>
-                    We bridge the gap between talented individuals and leading organizations. By offering structured workspaces, secure application flows, and intuitive profile controls, we make recruitment simple, fast, and transparent.
-                </p>
-                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                    <button className="btn-primary" onClick={() => navigate('/login')}>
-                        Get Started
-                    </button>
-                    <button className="btn-outline" onClick={() => navigate('/')}>
-                        Back to Home
-                    </button>
+            <div className="landing-hero" style={{ padding: '5rem 24px' }}>
+                <div className="hero-content">
+                    <div className="hero-badge">About Our Platform</div>
+                    <h1>Empowering Connections via the <br /><span>Smart Recruitment System</span></h1>
+                    <p className="hero-text" style={{ fontSize: '1.1rem', marginBottom: '24px' }}>
+                        We bridge the gap between talented individuals and leading organizations. By offering structured workspaces, secure application flows, and intuitive profile controls, we make recruitment simple, fast, and transparent.
+                    </p>
+                    <div style={{ display: 'flex', gap: '15px' }}>
+                        <button className="btn-primary" onClick={() => navigate('/login')}>
+                            Get Started
+                        </button>
+                        <button className="btn-outline" onClick={() => navigate('/')}>
+                            Back to Home
+                        </button>
+                    </div>
+                </div>
+                <div className="hero-visual">
+                    <img src="/hero-visual.jpg" alt="Smart Job Search Portal Dashboard Overview" className="hero-img" />
                 </div>
             </div>
 
             {/* 2. THE MISSION / VALUES */}
-            <div className="landing-section">
+            <div className="landing-section" style={{ backgroundColor: 'var(--surface)' }}>
                 <h2 className="section-title">Our Core Pillars</h2>
                 <p className="section-subtitle">The foundation of how we build and maintain our recruitment experience.</p>
                 
@@ -83,7 +88,7 @@ const About = () => {
                                 Post job listings in real-time, customize compensation and descriptions, view candidate profiles, download their submitted resumes, and update applicant statuses dynamically to optimize your hiring funnel.
                             </p>
                         </div>
-                        <button className="btn-outline" style={{ width: '100%', marginTop: 'auto' }} onClick={() => navigate('/login')}>
+                        <button className="btn-outline" style={{ width: '100%', marginTop: 'auto' }} onClick={() => navigate('/login?role=employer')}>
                             Employer Console
                         </button>
                     </div>

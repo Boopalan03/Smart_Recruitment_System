@@ -207,13 +207,10 @@ exports.deleteJob = async (req, res) => {
             return res.status(403).json({ msg: 'Not authorized to delete this job' });
         }
 
-        // Delete all applications related to this job
-        await Application.deleteMany({ job: id });
-
-        // Delete the job itself
+        // Delete the job itself (preserve seeker application records)
         await Job.findByIdAndDelete(id);
 
-        res.json({ msg: 'Job and all its applications deleted successfully' });
+        res.json({ msg: 'Job deleted successfully' });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

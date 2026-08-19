@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useContext, useState, useEffect, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import API from '../api';
+import { BellIcon, UserIcon, MenuIcon, CloseIcon } from './Icons';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
@@ -88,16 +89,26 @@ const Navbar = () => {
         navigate('/login');
     };
 
+    const getInitial = (name) => {
+        if (!name) return 'U';
+        return name.charAt(0).toUpperCase();
+    };
+
     return (
         <nav className="navbar">
-            <Link to="/" className="logo">Smart Job Portal</Link>
+            <Link to="/" className="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)', flexShrink: 0 }}>
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+                Smart Job Portal
+            </Link>
             
             <button 
                 className="mobile-menu-toggle" 
                 aria-label="Toggle navigation menu"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-                {mobileMenuOpen ? '✕' : '☰'}
+                {mobileMenuOpen ? <CloseIcon size={24} /> : <MenuIcon size={24} />}
             </button>
 
             <div className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
@@ -136,36 +147,26 @@ const Navbar = () => {
                             <div className="notification-container" style={{ position: 'relative' }} ref={notifRef}>
                                 <button 
                                     ref={notifButtonRef}
+                                    className="notification-btn"
                                     onClick={() => setShowNotifDropdown(!showNotifDropdown)}
-                                    style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', padding: '6px', color: '#475569' }}
+                                    aria-label="Toggle notifications dropdown"
                                 >
-                                    🔔
+                                    <BellIcon size={20} />
                                     {notifications.length > 0 && (
-                                        <span style={{ position: 'absolute', top: '0', right: '0', background: '#ef4444', width: '8px', height: '8px', borderRadius: '50%' }}></span>
+                                        <span className="notification-badge"></span>
                                     )}
                                 </button>
                                 {showNotifDropdown && (
-                                    <div className="sidebar" style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        right: 0,
-                                        zIndex: 999,
-                                        width: '320px',
-                                        background: 'white',
-                                        boxShadow: '0 15px 30px rgba(15, 23, 42, 0.15), 0 5px 15px rgba(15, 23, 42, 0.1)',
-                                        border: '1px solid #cbd5e1',
-                                        borderRadius: '12px',
-                                        padding: '16px',
-                                        textAlign: 'left',
-                                        marginTop: '10px'
-                                    }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px', marginBottom: '10px' }}>
-                                            <span style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.95rem' }}>Notifications</span>
-                                            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>({notifications.length})</span>
+                                    <div className="notif-dropdown">
+                                        <div className="notif-header">
+                                            <h4>Notifications</h4>
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--muted)', fontWeight: '600' }}>
+                                                ({notifications.length})
+                                            </span>
                                         </div>
-                                        <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div className="notif-list">
                                             {notifications.length === 0 ? (
-                                                <div style={{ padding: '20px 0', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
+                                                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--muted)', fontSize: '0.9rem' }}>
                                                     No new notifications
                                                 </div>
                                             ) : (
@@ -173,24 +174,15 @@ const Navbar = () => {
                                                     <div 
                                                         key={notif._id} 
                                                         onClick={() => handleViewNotification(notif._id)}
-                                                        style={{ 
-                                                            padding: '10px 12px', 
-                                                            background: '#f8fafc', 
-                                                            border: '1px solid #e2e8f0', 
-                                                            borderRadius: '8px', 
-                                                            fontSize: '0.85rem', 
-                                                            color: '#334155', 
-                                                            cursor: 'pointer',
-                                                            display: 'flex',
-                                                            justifyContent: 'space-between',
-                                                            alignItems: 'center',
-                                                            transition: 'all 0.2s'
-                                                        }}
-                                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f1f5f9'; }}
-                                                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc'; }}
+                                                        className="notif-item"
                                                     >
-                                                        <span style={{ flex: 1, marginRight: '10px', lineHeight: '1.4' }}>{notif.message}</span>
-                                                        <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', padding: '2px 6px' }} onClick={(e) => { e.stopPropagation(); handleDeleteNotification(notif._id); }}>✖</span>
+                                                        <span className="notif-text">{notif.message}</span>
+                                                        <span 
+                                                            className="notif-close" 
+                                                            onClick={(e) => { e.stopPropagation(); handleDeleteNotification(notif._id); }}
+                                                        >
+                                                            ✖
+                                                        </span>
                                                     </div>
                                                 ))
                                             )}
@@ -202,14 +194,19 @@ const Navbar = () => {
                         <Link 
                             to="/my-account" 
                             className={`nav-link ${location.pathname === '/my-account' ? 'active' : ''}`} 
-                            style={{display:'flex', alignItems:'center', gap:'5px', fontWeight:'600'}}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
                         >
-                            👤 {user.name}
+                            <div className="user-avatar-btn">
+                                <span className="user-avatar">{getInitial(user.name)}</span>
+                                <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {user.name}
+                                </span>
+                            </div>
                         </Link>
                         <button 
                             onClick={handleLogout} 
                             className="btn-outline" 
-                            style={{padding: '6px 16px', color: '#ef4444', borderColor: '#ef4444'}}
+                            style={{ padding: '8px 18px', color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)', fontSize: '0.9rem' }}
                         >
                             Logout
                         </button>
@@ -217,7 +214,7 @@ const Navbar = () => {
                 ) : (
                     <>
                         <Link to="/login" className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}>Login</Link>
-                        <Link to="/register" className="btn-primary">Register</Link>
+                        <Link to="/register" className="btn-primary" style={{ padding: '8px 20px', fontSize: '0.9rem' }}>Register</Link>
                     </>
                 )}
             </div>

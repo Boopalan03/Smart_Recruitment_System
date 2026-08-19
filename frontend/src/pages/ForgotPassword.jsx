@@ -19,27 +19,43 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="auth-container">
-            <h2 className="auth-title">Reset Password</h2>
+        <div className="auth-wrapper">
+            <div className="auth-container">
+                <h2 className="auth-title">Reset Password</h2>
+                <p className="auth-subtitle">Enter your email and define your new password below</p>
 
-            <form onSubmit={handleResetPassword} className="auth-form">
-                <p style={{textAlign:'center', color:'#64748b', fontSize:'0.9rem'}}>
-                    Enter your account email and your new password.
-                </p>
-                <input 
-                    type="email" placeholder="Enter your email" className="auth-input"
-                    value={email} onChange={(e) => setEmail(e.target.value)} required 
-                />
-                <input 
-                    type="password" placeholder="Enter New Password" className="auth-input"
-                    value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required 
-                />
-                <button type="submit" className="auth-btn">Reset Password</button>
-            </form>
+                <form onSubmit={handleResetPassword} className="auth-form">
+                    <div className="auth-form-group">
+                        <label className="auth-label">Email Address</label>
+                        <input 
+                            type="email" 
+                            placeholder="name@example.com" 
+                            className="auth-input"
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            required 
+                        />
+                    </div>
+                    
+                    <div className="auth-form-group">
+                        <label className="auth-label">New Password</label>
+                        <input 
+                            type="password" 
+                            placeholder="Enter new password" 
+                            className="auth-input"
+                            value={newPassword} 
+                            onChange={(e) => setNewPassword(e.target.value)} 
+                            required 
+                        />
+                    </div>
 
-            <div className="auth-footer">
-                Remember your password? 
-                <Link to="/login" className="auth-link">Login</Link>
+                    <button type="submit" className="auth-btn">Reset Password</button>
+                </form>
+
+                <div className="auth-footer">
+                    Remember your password? 
+                    <Link to="/login" className="auth-link">Login</Link>
+                </div>
             </div>
         </div>
     );
