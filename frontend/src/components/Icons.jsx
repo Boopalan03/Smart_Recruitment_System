@@ -28,14 +28,6 @@ export const BriefcaseIcon = ({ className = "", size = 18, color = "currentColor
     </svg>
 );
 
-export const CalendarIcon = ({ className = "", size = 18, color = "currentColor" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="16" y1="2" x2="16" y2="6"></line>
-        <line x1="8" y1="2" x2="8" y2="6"></line>
-        <line x1="3" y1="10" x2="21" y2="10"></line>
-    </svg>
-);
 
 export const BellIcon = ({ className = "", size = 20, color = "currentColor" }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -117,12 +109,6 @@ export const BlockIcon = ({ size = 20, color = "currentColor" }) => (
     </svg>
 );
 
-export const EyeIcon = ({ className = "", size = 18, color = "currentColor" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-        <circle cx="12" cy="12" r="3"></circle>
-    </svg>
-);
 
 export const BookmarkIcon = ({ className = "", size = 18, color = "currentColor", fill = "none" }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -130,17 +116,6 @@ export const BookmarkIcon = ({ className = "", size = 18, color = "currentColor"
     </svg>
 );
 
-export const ChevronRightIcon = ({ className = "", size = 18, color = "currentColor" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-);
-
-export const ChevronDownIcon = ({ className = "", size = 18, color = "currentColor" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <polyline points="6 9 12 15 18 9"></polyline>
-    </svg>
-);
 
 export const ClockIcon = ({ className = "", size = 18, color = "currentColor" }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>

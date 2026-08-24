@@ -12,11 +12,11 @@ const Login = () => {
         try {
             const loggedInUser = await login(formData.email, formData.password);
             if (loggedInUser && loggedInUser.role === 'employer') {
-                navigate('/employer-dashboard');
+                navigate('/employer-dashboard', { replace: true });
             } else if (loggedInUser && loggedInUser.role === 'superadmin') {
-                navigate('/superadmin');
+                navigate('/superadmin', { replace: true });
             } else {
-                navigate('/dashboard?tab=feed'); // Redirect seeker to dashboard feed
+                navigate('/dashboard?tab=feed', { replace: true }); // Redirect seeker to dashboard feed
             }
         } catch {
             alert('Invalid Credentials');

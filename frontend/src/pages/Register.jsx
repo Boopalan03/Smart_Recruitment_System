@@ -25,9 +25,9 @@ const Register = () => {
             const registeredUser = await register({ ...formData, role });
             alert("Registration Successful!");
             if (registeredUser && registeredUser.role === 'employer') {
-                navigate('/employer-dashboard');
+                navigate('/employer-dashboard', { replace: true });
             } else {
-                navigate('/');
+                navigate('/', { replace: true });
             }
         } catch (err) {
             const msg = err.response?.data?.msg || 'Registration Failed';

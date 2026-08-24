@@ -335,7 +335,7 @@ const EmployerDashboard = () => {
                                 className={`sidebar-btn ${view === 'messages' ? 'active' : ''}`}
                                 style={{ position: 'relative' }}
                             >
-                                <span>📥</span>
+                                <DownloadIcon size={18} />
                                 <span>Applications Inbox</span>
                                 {totalPending > 0 && (
                                     <span style={{ 

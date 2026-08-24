@@ -65,6 +65,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  padding-top: 74px; /* Compensate for fixed navbar */
 }
 
 /* Scrollbar */
@@ -106,8 +107,10 @@ body {
    NAVBAR REDESIGN
    ========================================================================== */
 .navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 100%;
   z-index: 1000;
   background-color: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
@@ -1363,6 +1366,8 @@ body {
   flex-direction: column;
   gap: 2rem;
   box-shadow: var(--shadow);
+  position: sticky;
+  top: 100px;
 }
 
 .sidebar-menu {
